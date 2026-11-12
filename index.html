@@ -3,37 +3,55 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RMgX Design Studio — Making complexity usable</title>
-  <meta name="description" content="RMgX Design Studio is the product design practice of RMgX, a product engineering company. Research, product strategy, UX and interface design for complex products.">
-  <meta name="theme-color" content="#F1EEE7">
+  <title>AI Builders — RMgX Design Studio</title>
+  <meta name="description" content="RMgX Design Studio designs and engineers AI products that work in production: AI product design, AI audits, AI strategy and AI business upgrades, delivered by one team.">
+  <meta name="theme-color" content="#051119">
+  <link rel="preload" href="assets/fonts/open-sauce-one-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/open-sauce-one-latin-600.woff2" as="font" type="font/woff2" crossorigin>
+  <!-- Bricolage Grotesque: used only for the hero headline -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&display=swap">
   <link rel="stylesheet" href="css/styles.css">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23121216'/%3E%3Cpath d='M9 7h7l8 9-8 9H9l8-9z' fill='%235B45F2'/%3E%3C/svg%3E">
+  <link rel="icon" href="assets/brand/symbol.svg" type="image/svg+xml">
 </head>
 <body>
+  <!-- Brand sprite: the RMgX Design Studio logo, traced from the 2026 brand guidelines.
+       One source for every use on the page (header, hero, menu, contact, footer). -->
+  <svg class="sprite" aria-hidden="true" focusable="false" width="0" height="0">
+    <defs>
+      <linearGradient id="rds-grad" gradientUnits="userSpaceOnUse" x1="400" y1="47" x2="1010" y2="622">
+        <stop offset="0" stop-color="#099FFA"/>
+        <stop offset="1" stop-color="#543EFA"/>
+      </linearGradient>
+      <symbol id="rds-symbol" viewBox="80 47 950 575">
+        <path data-part="chevron" fill-rule="evenodd" style="fill: var(--logo-chev, url(#rds-grad))" d="M385 47H865L1030 335L865 622H385L550 335Z M628 192H790L870 335L790 480H628L710 335Z"/>
+        <path data-part="dot" style="fill: var(--logo-dots, #543EFA)" d="M143 245V308A63 63 0 1 1 206 245Z"/>
+        <path data-part="dot" style="fill: var(--logo-dots, #543EFA)" d="M287 190L355 298A63 63 0 1 1 287 190Z"/>
+        <path data-part="dot" style="fill: var(--logo-dots, #543EFA)" d="M80 427A63 63 0 1 0 206 427A63 63 0 1 0 80 427Z"/>
+        <path data-part="dot" style="fill: var(--logo-dots, #543EFA)" d="M320 427V364A63 63 0 1 1 257 427Z"/>
+      </symbol>
+    </defs>
+  </svg>
+
   <a class="skip" href="#main">Skip to content</a>
 
+  <!-- One particle field for the whole page: it sits behind everything and tells the story -->
+  <canvas class="field" data-field aria-hidden="true"></canvas>
+
   <!-- ============ HEADER ============ -->
-  <header class="site-header" data-header>
+  <header class="site-header" data-header data-on="paper">
     <a class="brand" href="#top" aria-label="RMgX Design Studio, back to top">
-      <svg class="brand__mark" viewBox="0 0 40 32" aria-hidden="true">
-        <rect class="brand__px brand__px--1" x="1" y="9" width="4" height="4"/>
-        <rect class="brand__px brand__px--2" x="5" y="19" width="4" height="4"/>
-        <rect class="brand__px brand__px--3" x="0" y="15" width="3" height="3"/>
-        <path class="brand__chev" d="M12 4h12l12 12-12 12H12l12-12z"/>
-      </svg>
-      <span class="brand__word">RMgX <em>Design Studio</em></span>
+      <img class="brand__logo" src="assets/brand/rds-logo.png" width="1010" height="205" alt="RMgX Design Studio">
     </a>
 
-    <p class="resolution" aria-hidden="true" data-resolution>
-      <span class="resolution__bar"><span data-resolution-bar></span></span>
-      <span class="resolution__label">Resolved <b data-resolution-num>00</b>%</span>
+    <p class="resolution chapter" aria-hidden="true">
+      <span class="resolution__bar"><span data-chapter-bar></span></span>
+      <span class="resolution__label" data-chapter-label>RMgX · AI Builders</span>
     </p>
 
     <div class="header__actions">
-      <a class="link-cta link-cta--small" href="#contact">Start a project</a>
+      <a class="link-cta link-cta--small" href="https://calendly.com/rmgx/connect-rds" target="_blank" rel="noopener" data-call>Book a discovery call</a>
       <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu" data-menu-open>
         <span class="menu-btn__label">Menu</span>
         <span class="menu-btn__icon" aria-hidden="true"><i></i><i></i></span>
@@ -48,7 +66,7 @@
     <div class="menu__art" aria-hidden="true" data-menu-art></div>
     <div class="menu__inner">
       <div class="menu__top">
-        <span class="mono">Index / RMgX Design Studio</span>
+        <span class="mono">Index / AI Builders</span>
         <button class="menu-btn menu-btn--close" type="button" data-menu-close>
           <span class="menu-btn__label">Close</span>
           <span class="menu-btn__icon is-x" aria-hidden="true"><i></i><i></i></span>
@@ -56,20 +74,19 @@
       </div>
       <nav class="menu__nav" aria-label="Primary">
         <ol>
-          <li><a href="#work" data-note="Six products, one habit: making hard things clear."><span class="mono">01</span><span class="menu__word">Work</span></a></li>
-          <li><a href="#approach" data-note="Why the brief is rarely the problem."><span class="mono">02</span><span class="menu__word">Approach</span></a></li>
-          <li><a href="#capabilities" data-note="From a foggy idea to a buildable product."><span class="mono">03</span><span class="menu__word">Capabilities</span></a></li>
-          <li><a href="#engineering" data-note="Designed with the people who build it."><span class="mono">04</span><span class="menu__word">Design × Engineering</span></a></li>
-          <li><a href="#why" data-note="What clients actually get from us."><span class="mono">05</span><span class="menu__word">Why RMgX</span></a></li>
-          <li><a href="#contact" data-note="Bring us the messy version."><span class="mono">06</span><span class="menu__word">Contact</span></a></li>
+          <li><a href="#services" data-note="Design, audit, strategy, upgrade: four ways to start."><span class="mono">01</span><span class="menu__word">Services</span></a></li>
+          <li><a href="#process" data-note="Six steps, one team, from discovery to optimisation."><span class="mono">02</span><span class="menu__word">How we build</span></a></li>
+          <li><a href="#work" data-note="How we approach three common AI briefs."><span class="mono">03</span><span class="menu__word">Work</span></a></li>
+          <li><a href="#stack" data-note="LLMs, RAG, agents, data and evaluation."><span class="mono">04</span><span class="menu__word">Technology</span></a></li>
+          <li><a href="#why" data-note="Product design, engineering and data under one roof."><span class="mono">05</span><span class="menu__word">Why RMgX</span></a></li>
+          <li><a href="#contact" data-note="Have an AI idea? Let’s build it."><span class="mono">06</span><span class="menu__word">Contact</span></a></li>
         </ol>
       </nav>
       <div class="menu__foot">
-        <p class="menu__note serif" data-menu-note>Pick a chapter. Or scroll — it all resolves eventually.</p>
+        <p class="menu__note serif" data-menu-note>Pick a chapter, or book a 30-minute discovery call.</p>
         <div class="menu__contact">
+          <a href="https://calendly.com/rmgx/connect-rds" target="_blank" rel="noopener">Book a discovery call ↗</a>
           <a href="mailto:contact@rmgx.in">contact@rmgx.in</a>
-          <a href="https://www.behance.net/rmgx-studio" target="_blank" rel="noopener">Behance ↗</a>
-          <a href="https://dribbble.com/RMgX" target="_blank" rel="noopener">Dribbble ↗</a>
           <a href="https://www.linkedin.com/company/rmgx" target="_blank" rel="noopener">LinkedIn ↗</a>
         </div>
       </div>
@@ -77,196 +94,218 @@
   </div>
 
   <main id="main">
-    <!-- ============ 00 HERO ============ -->
-    <section class="hero" id="top" data-theme="paper" data-hero>
-      <div class="hero__stage">
-        <canvas class="hero__canvas" data-cells="hero" aria-hidden="true"></canvas>
+    <!-- ============ 01 HERO ============ -->
+    <section class="hero" id="top" data-theme="paper" data-tone="light" data-chapter="RMgX · AI Builders">
+      <div class="hero__stage" data-hero-stage>
+      <div class="form-slot form-slot--hero" data-form="logo" aria-hidden="true"></div>
+      <div class="hero__copy wrap">
+        <p class="kicker mono reveal">RMgX Design Studio <span>/</span> AI Builders</p>
+        <h1 class="hero__title">
+          <span class="line">We make</span>
+          <span class="line"><span class="jumble" data-jumble aria-label="complexity">complexity</span></span>
+          <span class="line"><em class="serif">usable.</em></span>
+        </h1>
+        <div class="hero__aside">
+          <p>We design and engineer AI products that work in production, not just in the demo: copilots, knowledge assistants and automated workflows, built by one team of designers, engineers and data specialists.</p>
+          <div class="hero__ctas">
+            <a class="link-cta" href="https://calendly.com/rmgx/connect-rds" target="_blank" rel="noopener" data-call>Book an AI discovery call</a>
+            <a class="link-quiet" href="#services">See what we build <span aria-hidden="true">↓</span></a>
+          </div>
+        </div>
+        <nav class="hero__index" aria-label="Services">
+          <p class="mono">Four ways to start</p>
+          <ol>
+            <li><a href="#ai-product-design"><span class="mono">01</span> AI Product Design <i>Build something new</i></a></li>
+            <li><a href="#ai-audit"><span class="mono">02</span> AI Audit <i>Find the value</i></a></li>
+            <li><a href="#ai-strategy"><span class="mono">03</span> AI Strategy <i>Plan the route</i></a></li>
+            <li><a href="#ai-business-upgrade"><span class="mono">04</span> AI Business Upgrade <i>Run it better</i></a></li>
+          </ol>
+        </nav>
+        <p class="hero__hint mono" aria-hidden="true"><span class="hint-pointer">Move your cursor to bring things into focus.</span><span class="hint-touch">Tap to bring things into focus.</span> Scroll to resolve.</p>
+      </div>
+      </div>
+    </section>
 
-        <div class="hero__copy wrap">
-          <p class="kicker mono reveal">RMgX Design Studio <span>/</span> Product strategy · UX · Interface design</p>
-          <h1 class="hero__title">
-            <span class="line">We make</span>
-            <span class="line"><span class="jumble" data-jumble aria-label="complexity">complexity</span></span>
-            <span class="line"><em class="serif">usable.</em></span>
-          </h1>
-          <div class="hero__aside">
-            <p>A product design studio inside RMgX, a product engineering company. We help teams with tangled problems find the clear version — then design it alongside the engineers who build it.</p>
-            <div class="hero__ctas">
-              <a class="link-cta" href="#contact">Start a project</a>
-              <a class="link-quiet" href="#work">See the work <span aria-hidden="true">↓</span></a>
+    <div class="tone-shift" data-shift="1" data-from="light" data-to="dark" aria-hidden="true"></div>
+
+    <!-- ============ 02–05 SERVICES ============ -->
+    <div id="services">
+      <section class="svc" id="ai-product-design" data-theme="ink" data-tone="dark" data-chapter="01 · AI Product Design">
+        <div class="wrap svc__grid">
+          <div class="svc__copy">
+            <p class="svc__num mono"><span>01</span> / 04 · AI Product Design</p>
+            <h2 class="svc__title reveal">Turn ideas into intelligent <em class="serif">products.</em></h2>
+            <p class="svc__lede">From first concept to launch-ready MVP: AI experiences designed around real users and built on the model that fits the job, not the one in the headlines.</p>
+            <ul class="svc__list">
+              <li>AI-native product experiences</li>
+              <li>LLM-powered applications</li>
+              <li>Copilots and in-product assistants</li>
+              <li>Conversational interfaces</li>
+              <li>RAG-powered knowledge products</li>
+              <li>AI MVPs built to scale</li>
+            </ul>
+            <p class="svc__deliv"><span class="mono">You leave with</span> A tested prototype or a production-ready MVP</p>
+            <div class="svc__foot">
+              <a class="link-cta" href="#contact" data-pick="AI Product Design">Discuss your product idea</a>
+              <span class="svc__meta mono">8–14 weeks</span>
             </div>
           </div>
-          <p class="hero__hint mono" aria-hidden="true"><span class="hint-pointer">Move your cursor to bring things into focus.</span><span class="hint-touch">Drag to bring things into focus.</span> Scroll to resolve.</p>
+          <div class="form-slot" data-form="design" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <section class="svc svc--flip" id="ai-audit" data-theme="ink" data-tone="dark" data-chapter="02 · AI Audit">
+        <div class="wrap svc__grid">
+          <div class="svc__copy">
+            <p class="svc__num mono"><span>02</span> / 04 · AI Audit</p>
+            <h2 class="svc__title reveal">Find where AI creates real <em class="serif">value.</em></h2>
+            <p class="svc__lede">A structured review of your workflows, data and systems, so you invest in use cases that pay back and skip the ones that won’t.</p>
+            <ul class="svc__list">
+              <li>AI readiness assessment</li>
+              <li>Workflow and process review</li>
+              <li>Data and infrastructure evaluation</li>
+              <li>Automation opportunity mapping</li>
+              <li>Technical feasibility checks</li>
+              <li>Value-versus-effort prioritisation</li>
+            </ul>
+            <p class="svc__deliv"><span class="mono">You leave with</span> A scored opportunity map and a 90-day action plan</p>
+            <div class="svc__foot">
+              <a class="link-cta" href="#contact" data-pick="AI Audit">Book an AI Audit</a>
+              <span class="svc__meta mono">2–4 weeks</span>
+            </div>
+          </div>
+          <div class="form-slot" data-form="audit" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <section class="svc" id="ai-strategy" data-theme="ink" data-tone="dark" data-chapter="03 · AI Strategy">
+        <div class="wrap svc__grid">
+          <div class="svc__copy">
+            <p class="svc__num mono"><span>03</span> / 04 · AI Strategy</p>
+            <h2 class="svc__title reveal">A practical roadmap for AI <em class="serif">adoption.</em></h2>
+            <p class="svc__lede">Decide what to build, buy or integrate, in what order and on what architecture, with governance that lets you move quickly without adding risk.</p>
+            <ul class="svc__list">
+              <li>Opportunity mapping</li>
+              <li>Use-case prioritisation</li>
+              <li>Technology and model selection</li>
+              <li>Architecture planning</li>
+              <li>Governance and responsible-AI policy</li>
+              <li>Phased implementation roadmap</li>
+            </ul>
+            <p class="svc__deliv"><span class="mono">You leave with</span> A costed, phased roadmap your leadership can sign off</p>
+            <div class="svc__foot">
+              <a class="link-cta" href="#contact" data-pick="AI Strategy">Plan your AI roadmap</a>
+              <span class="svc__meta mono">4–6 weeks</span>
+            </div>
+          </div>
+          <div class="form-slot" data-form="strategy" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <section class="svc svc--flip" id="ai-business-upgrade" data-theme="ink" data-tone="dark" data-chapter="04 · AI Business Upgrade">
+        <div class="wrap svc__grid">
+          <div class="svc__copy">
+            <p class="svc__num mono"><span>04</span> / 04 · AI Business Upgrade</p>
+            <h2 class="svc__title reveal">Upgrade how your business <em class="serif">runs.</em></h2>
+            <p class="svc__lede">We bring AI into the operations you already have: connecting systems, removing repetitive work and putting knowledge where decisions are made.</p>
+            <ul class="svc__list">
+              <li>Intelligent process automation</li>
+              <li>Agentic workflows</li>
+              <li>Enterprise system integrations</li>
+              <li>Knowledge management and search</li>
+              <li>Predictive insights and forecasting</li>
+              <li>Operational optimisation</li>
+            </ul>
+            <p class="svc__deliv"><span class="mono">You leave with</span> AI running inside live workflows, measured against a baseline</p>
+            <div class="svc__foot">
+              <a class="link-cta" href="#contact" data-pick="AI Business Upgrade">Upgrade a workflow</a>
+              <span class="svc__meta mono">Phased · ongoing</span>
+            </div>
+          </div>
+          <div class="form-slot" data-form="upgrade" aria-hidden="true"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ 06 HOW WE BUILD ============ -->
+    <section class="process" id="process" data-theme="ink" data-tone="dark" data-chapter="How we build">
+      <div class="wrap">
+        <header class="sec-head sec-head--split">
+          <div>
+            <span class="sec-num mono">05 — How we build</span>
+            <h2 class="sec-title reveal">Six steps. One team, start to <em class="serif">finish.</em></h2>
+          </div>
+          <p class="sec-aside">Designers, engineers and data specialists work together from the first workshop to live operations, so nothing gets lost in hand-offs.</p>
+        </header>
+        <div class="form-slot form-slot--line" data-form="process" aria-hidden="true"></div>
+        <ol class="steps">
+          <li><span class="mono">01 · 1–2 weeks</span><h3>Discover</h3><p>Users, workflows, data and constraints. We agree what success looks like and how to measure it.</p></li>
+          <li><span class="mono">02 · 1–2 weeks</span><h3>Define</h3><p>Prioritised use cases, success metrics, an architecture outline and guardrails.</p></li>
+          <li><span class="mono">03 · 2–4 weeks</span><h3>Design</h3><p>Flows and prototypes on real model output, tested with the people who’ll use them.</p></li>
+          <li><span class="mono">04 · 6–12 weeks</span><h3>Engineer</h3><p>Production code, integrations, evaluation and security, shipped in short releases.</p></li>
+          <li><span class="mono">05 · 1–2 weeks</span><h3>Deploy</h3><p>Staged rollout, monitoring and team onboarding. No big-bang launches.</p></li>
+          <li><span class="mono">06 · ongoing</span><h3>Optimise</h3><p>Track quality, cost and adoption, then tune prompts, retrieval and models as usage grows.</p></li>
+        </ol>
+        <p class="sec-cta"><span>Every engagement starts with a 30-minute discovery call.</span> <a class="link-cta" href="https://calendly.com/rmgx/connect-rds" target="_blank" rel="noopener" data-call>Book yours</a></p>
+      </div>
+    </section>
+
+    <div class="tone-shift" data-shift="1" data-from="dark" data-to="light" aria-hidden="true"></div>
+
+    <!-- ============ 07 SELECTED WORK ============ -->
+    <section class="work" id="work" data-theme="paper" data-tone="light" data-chapter="Selected work">
+      <div class="wrap">
+        <header class="sec-head sec-head--split">
+          <div>
+            <span class="sec-num mono">06 — Selected work</span>
+            <h2 class="sec-title reveal">Three briefs, three <em class="serif">approaches.</em></h2>
+          </div>
+          <p class="sec-aside">How we’d approach three common AI problems: what we’d build and what we’d measure. <b class="placeholder-note">Illustrative placeholders, not client results.</b></p>
+        </header>
+        <div class="cases" data-cases></div>
+        <p class="sec-cta"><span>Working on something similar?</span> <a class="link-cta" href="#contact" data-pick="Not sure yet">Talk it through with us</a></p>
+      </div>
+    </section>
+
+    <!-- ============ 08 TECHNOLOGY ============ -->
+    <section class="stack" id="stack" data-theme="paper" data-tone="light" data-chapter="Technology">
+      <div class="wrap">
+        <header class="sec-head sec-head--split">
+          <div>
+            <span class="sec-num mono">07 — Technology</span>
+            <h2 class="sec-title reveal">The model is one <em class="serif">part.</em></h2>
+          </div>
+          <p class="sec-aside">Production AI also needs retrieval, data pipelines, integrations and evaluation. We choose tools for each project; the names below are examples.</p>
+        </header>
+        <!-- Tool names in each .tools list are examples: edit freely. -->
+        <div class="stack__grid">
+          <div class="cap"><h3 class="mono">LLMs</h3><p>Model selection, prompting and fine-tuning matched to the task, the data and the budget.</p><ul class="tools"><li>GPT</li><li>Claude</li><li>Gemini</li><li>Llama</li><li>Mistral</li></ul></div>
+          <div class="cap"><h3 class="mono">RAG</h3><p>Answers grounded in your documents and data, with sources people can check.</p><ul class="tools"><li>LlamaIndex</li><li>LangChain</li><li>Hybrid search</li><li>Rerankers</li></ul></div>
+          <div class="cap"><h3 class="mono">AI agents</h3><p>Multi-step workflows that use your tools and hand back to a person when they should.</p><ul class="tools"><li>LangGraph</li><li>Function calling</li><li>MCP</li></ul></div>
+          <div class="cap"><h3 class="mono">Vector databases</h3><p>Fast, filtered semantic search over large and changing knowledge bases.</p><ul class="tools"><li>pgvector</li><li>Pinecone</li><li>Weaviate</li><li>Qdrant</li></ul></div>
+          <div class="cap"><h3 class="mono">APIs &amp; integrations</h3><p>AI connected to the CRMs, ERPs and internal systems your teams already use.</p><ul class="tools"><li>REST</li><li>GraphQL</li><li>Webhooks</li><li>Salesforce</li><li>SAP</li></ul></div>
+          <div class="cap"><h3 class="mono">Cloud infrastructure</h3><p>Secure, scalable deployment in your cloud, with costs monitored from day one.</p><ul class="tools"><li>AWS</li><li>Azure</li><li>Google Cloud</li><li>Docker</li><li>Kubernetes</li></ul></div>
+          <div class="cap"><h3 class="mono">Data engineering</h3><p>Pipelines that clean, structure and keep data fresh enough for AI to use.</p><ul class="tools"><li>Airflow</li><li>dbt</li><li>Snowflake</li><li>PostgreSQL</li></ul></div>
+          <div class="cap"><h3 class="mono">Model evaluation</h3><p>Test sets and quality, cost and latency tracking, before launch and after.</p><ul class="tools"><li>Ragas</li><li>LangSmith</li><li>Custom eval suites</li></ul></div>
         </div>
       </div>
     </section>
 
-    <!-- ============ 01 APPROACH ============ -->
-    <section class="approach slant" id="approach" data-theme="ink">
+    <div class="tone-shift" data-shift="1" data-from="light" data-to="dark" aria-hidden="true"></div>
+
+    <!-- ============ 09 WHY ============ -->
+    <section class="why" id="why" data-theme="ink" data-tone="dark" data-chapter="Why RMgX">
       <div class="wrap">
         <header class="sec-head">
-          <span class="sec-num mono">01 — Approach</span>
-          <h2 class="sec-title reveal">Most briefs arrive tangled.<br><em class="serif">Good.</em> That’s where we start.</h2>
-        </header>
-
-        <div class="thread" aria-hidden="true">
-          <svg viewBox="0 0 1200 220" preserveAspectRatio="none"><defs><linearGradient id="threadGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1200" y2="0"><stop offset="0" stop-color="#FF5B2E"/><stop offset=".45" stop-color="#FF5B2E"/><stop offset=".75" stop-color="#9688FF"/><stop offset="1" stop-color="#9688FF"/></linearGradient></defs><path data-thread d=""/></svg>
-          <span class="thread__l mono">ambiguous</span><span class="thread__r mono">clear direction</span>
-        </div>
-
-        <p class="approach__lede">Before we draw a single screen, we find out who the product is for, what’s really in their way, and which decision matters most. Often the request we’re handed and the problem worth solving are two different things.</p>
-
-        <ol class="reframes">
-          <li class="reframe" data-reframe>
-            <span class="reframe__tag mono">eShipper · Logistics</span>
-            <p class="reframe__from"><span class="mono">Where it could have started</span><s>Redesign the shipping dashboard.</s></p>
-            <p class="reframe__to"><span class="mono">What it really was</span>Customers were walked through every shipment by an in-house team. The work was automation, marketplace integrations and an e-commerce journey that could scale on its own.</p>
-          </li>
-          <li class="reframe" data-reframe>
-            <span class="reframe__tag mono">Forces Horizon · Career transition</span>
-            <p class="reframe__from"><span class="mono">Where it could have started</span><s>Build an AI résumé builder.</s></p>
-            <p class="reframe__to"><span class="mono">What it really was</span>Veterans couldn’t translate service records into language employers understand. They needed a step-by-step transition plan, not just a better CV.</p>
-          </li>
-          <li class="reframe" data-reframe>
-            <span class="reframe__tag mono">Decimal Factor · SME lending</span>
-            <p class="reframe__from"><span class="mono">Where it could have started</span><s>Make loan approvals faster.</s></p>
-            <p class="reframe__to"><span class="mono">What it really was</span>Lending officers needed automation they could trust: every recommendation explainable, every decision trail auditable.</p>
-          </li>
-        </ol>
-
-        <ul class="principles">
-          <li><span class="mono">a.</span><b>People before pixels.</b> We talk to the people who’ll use it, then to the people who’ll pay for it.</li>
-          <li><span class="mono">b.</span><b>Problems before features.</b> The cheapest screen is the one you didn’t need to build.</li>
-          <li><span class="mono">c.</span><b>Decisions before decoration.</b> Every element earns its place, or it goes.</li>
-          <li><span class="mono">d.</span><b>Engineers in the room.</b> Feasibility is a design input, not a surprise in sprint six.</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- ============ 02 WORK ============ -->
-    <section class="work" id="work" data-theme="paper">
-      <div class="wrap">
-        <header class="sec-head sec-head--split">
-          <div>
-            <span class="sec-num mono">02 — Selected work</span>
-            <h2 class="sec-title reveal">Work that<br>had to <em class="serif">work.</em></h2>
-          </div>
-          <p class="sec-aside">Logistics, lending, public safety, careers, sport, groceries. Different industries, the same habit: find the knot, untie it, make it feel obvious.</p>
-        </header>
-
-        <div class="projects" data-projects>
-          <!-- Cards are rendered from js/data.js so the drawer and grid share one source -->
-        </div>
-
-        <div class="archive">
-          <div class="archive__head">
-            <h3 class="mono">Also from the studio</h3>
-            <p class="archive__hint mono">Hover for a preview</p>
-          </div>
-          <ul class="archive__list" data-archive></ul>
-          <figure class="archive__peek" aria-hidden="true" data-peek><img alt="" src="" data-peek-img></figure>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ 03 CAPABILITIES ============ -->
-    <section class="caps slant slant--violet" id="capabilities" data-theme="violet">
-      <div class="wrap">
-        <header class="sec-head sec-head--split">
-          <div>
-            <span class="sec-num mono">03 — Capabilities</span>
-            <h2 class="sec-title reveal">From fog<br>to <em class="serif">form.</em></h2>
-          </div>
-          <p class="sec-aside">You don’t need to know which “service” you need. Tell us where you’re stuck — we’ll meet the product there and move it toward clarity.</p>
-        </header>
-
-        <div class="caps__ruler" role="tablist" aria-label="Where is your product today?" data-caps-tabs>
-          <span class="caps__end mono" aria-hidden="true">Uncertain</span>
-          <!-- tabs rendered by JS -->
-          <span class="caps__end mono" aria-hidden="true">Clear</span>
-        </div>
-
-        <div class="caps__body">
-          <div class="caps__specimen">
-            <canvas data-cells="caps" aria-hidden="true"></canvas>
-            <span class="caps__specimen-label mono" data-caps-label></span>
-          </div>
-          <div class="caps__panel" role="tabpanel" aria-live="polite" data-caps-panel></div>
-        </div>
-
-        <ul class="caps__modes">
-          <li><span class="mono">Ways to work</span></li>
-          <li><b>Design from scratch</b> — turn an idea into a tested MVP and a pitch-ready prototype.</li>
-          <li><b>Product redesign</b> — make an existing product easier to use and easier to sell.</li>
-          <li><b>Team extension</b> — a senior designer embedded in your team, on subscription.</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- ============ 04 DESIGN x ENGINEERING ============ -->
-    <section class="dxe" id="engineering" data-theme="paper">
-      <div class="wrap">
-        <header class="sec-head sec-head--split">
-          <div>
-            <span class="sec-num mono">04 — Design × Engineering</span>
-            <h2 class="sec-title reveal">Designed with the<br>people who <em class="serif">build it.</em></h2>
-          </div>
-          <p class="sec-aside">The studio sits inside RMgX, alongside its engineering, QA, DevOps and data teams. So the screens we hand over already know about loading states, API limits and the customer with 4,000 shipments.</p>
-        </header>
-
-        <div class="lab" data-lab>
-          <div class="lab__bar">
-            <span class="mono">Specimen: shipment card</span>
-            <div class="lab__states" role="group" aria-label="Component state">
-              <button type="button" aria-pressed="true" data-state="ready">Ready</button>
-              <button type="button" aria-pressed="false" data-state="loading">Loading</button>
-              <button type="button" aria-pressed="false" data-state="empty">Empty</button>
-              <button type="button" aria-pressed="false" data-state="error">Error</button>
-            </div>
-          </div>
-
-          <div class="lab__stage" data-lab-stage>
-            <!-- Design side -->
-            <div class="lab__side lab__side--design" aria-label="Design intent">
-              <span class="lab__tag mono">Design intent</span>
-              <div class="lab__frame" data-lab-render="design"></div>
-            </div>
-            <!-- Engineering side (clipped) -->
-            <div class="lab__side lab__side--code" aria-label="Engineering view" data-lab-code>
-              <span class="lab__tag mono">In the build</span>
-              <div class="lab__frame" data-lab-render="code"></div>
-            </div>
-            <div class="lab__seam" role="slider" tabindex="0" aria-label="Compare design and engineering" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" data-seam>
-              <span class="lab__handle" aria-hidden="true">⟷</span>
-            </div>
-          </div>
-          <p class="lab__note serif" data-lab-note aria-live="polite"></p>
-          <p class="lab__caption mono">Drag the seam. Switch states. Same component, two languages — one team.</p>
-        </div>
-
-        <ol class="relay">
-          <li><span class="mono">Research</span><p>What people actually do, not what they say they do.</p></li>
-          <li><span class="mono">Product</span><p>What to build first, what to leave out, how we’ll know it worked.</p></li>
-          <li><span class="mono">Design</span><p>Flows, interfaces and systems that hold up at the edges.</p></li>
-          <li><span class="mono">Engineering</span><p>Feasibility checks before handoff, design QA after it.</p></li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- ============ 05 WHY ============ -->
-    <section class="why slant slant--ink" id="why" data-theme="ink">
-      <div class="wrap">
-        <header class="sec-head">
-          <span class="sec-num mono">05 — Why RMgX</span>
-          <h2 class="sec-title sec-title--sm reveal">Five reasons, no adjectives.</h2>
+          <span class="sec-num mono">08 — Why RMgX</span>
+          <h2 class="sec-title sec-title--sm reveal">Design, engineering and data. One team.</h2>
         </header>
 
         <ol class="claims">
-          <li class="claim" tabindex="0"><span class="claim__n mono">1</span><span class="claim__t">We care how it <em class="serif">feels.</em></span><span class="claim__p">Our SmashWise coaching platform won India’s Best Design Project at IBDA 2024.</span></li>
-          <li class="claim" tabindex="0"><span class="claim__n mono">2</span><span class="claim__t">We listen before we <em class="serif">draw.</em></span><span class="claim__p">Design-thinking workshops shaped VeteranX’s onboarding flows and success metrics.</span></li>
-          <li class="claim" tabindex="0"><span class="claim__n mono">3</span><span class="claim__t">We know what it costs to <em class="serif">build.</em></span><span class="claim__p">Designers who work beside engineers make decisions that are cheaper to ship and maintain.</span></li>
-          <li class="claim" tabindex="0"><span class="claim__n mono">4</span><span class="claim__t">We work in the <em class="serif">open.</em></span><span class="claim__p">Direct access to your designers, and a customer success manager when you need one.</span></li>
-          <li class="claim" tabindex="0"><span class="claim__n mono">5</span><span class="claim__t">We measure what <em class="serif">changed.</em></span><span class="claim__p">Loan decisions in 4 hours instead of 5 days. Orders up 20% at Just Organik.</span></li>
+          <li class="claim" tabindex="0"><span class="claim__n mono">1</span><span class="claim__t">We design for real <em class="serif">use.</em></span><span class="claim__p">Product designers shape every AI interaction: how it asks, explains and recovers when it’s unsure.</span></li>
+          <li class="claim" tabindex="0"><span class="claim__n mono">2</span><span class="claim__t">We engineer for <em class="serif">production.</em></span><span class="claim__p">The same team builds the integrations, security and monitoring that turn a prototype into a product.</span></li>
+          <li class="claim" tabindex="0"><span class="claim__n mono">3</span><span class="claim__t">We start from your <em class="serif">data.</em></span><span class="claim__p">Data quality and access are checked first, so what we build works with the data you actually have.</span></li>
+          <li class="claim" tabindex="0"><span class="claim__n mono">4</span><span class="claim__t">We ship, then <em class="serif">improve.</em></span><span class="claim__p">Releases every few weeks, with quality, cost and adoption tracked after launch.</span></li>
         </ol>
 
         <div class="ledger">
@@ -317,31 +356,43 @@
       </div>
     </section>
 
-    <!-- ============ 06 CONTACT ============ -->
-    <section class="close" id="contact" data-theme="ink" data-close>
-      <canvas class="close__canvas" data-cells="close" aria-hidden="true"></canvas>
-      <div class="wrap close__inner">
-        <span class="sec-num mono">06 — Start a conversation</span>
-        <h2 class="close__title">Bring us the<br><span class="jumble" data-jumble="close" aria-label="messy">messy</span> version.</h2>
+    <div class="tone-shift" data-shift="1" data-from="dark" data-to="light" aria-hidden="true"></div>
 
-        <div class="starter">
-          <p class="starter__q mono" id="starter-q">What are you bringing?</p>
-          <div class="starter__chips" role="group" aria-labelledby="starter-q" data-chips>
-            <button type="button" aria-pressed="false" data-chip="An idea that needs shape">An idea that needs shape</button>
-            <button type="button" aria-pressed="false" data-chip="A product that’s hard to use">A product that’s hard to use</button>
-            <button type="button" aria-pressed="false" data-chip="A complex system that needs a clear face">A complex system that needs a clear face</button>
-            <button type="button" aria-pressed="false" data-chip="A team that needs design hands">A team that needs design hands</button>
+    <!-- ============ 10 CONTACT ============ -->
+    <section class="close" id="contact" data-theme="paper" data-tone="light" data-chapter="Start a project">
+      <div class="wrap close__inner">
+        <div class="close__copy">
+          <span class="sec-num mono">09 — Start a project</span>
+          <h2 class="close__title">Have an AI idea?<br>Let’s <span class="jumble" data-jumble="close" aria-label="build">build</span> it.</h2>
+          <p class="close__lede">Book a 30-minute discovery call. We’ll talk through the idea, the data you have and the fastest route to something real. No deck needed.</p>
+
+          <div class="starter">
+            <p class="starter__q mono" id="starter-q">What would you like to discuss?</p>
+            <div class="starter__chips" role="group" aria-labelledby="starter-q" data-chips>
+              <button type="button" aria-pressed="false" data-chip="AI Product Design">AI Product Design</button>
+              <button type="button" aria-pressed="false" data-chip="AI Audit">AI Audit</button>
+              <button type="button" aria-pressed="false" data-chip="AI Strategy">AI Strategy</button>
+              <button type="button" aria-pressed="false" data-chip="AI Business Upgrade">AI Business Upgrade</button>
+              <button type="button" aria-pressed="false" data-chip="Not sure yet">Not sure yet</button>
+            </div>
+            <div class="starter__actions">
+              <a class="link-cta link-cta--big" href="https://calendly.com/rmgx/connect-rds" target="_blank" rel="noopener" data-call>Book an AI discovery call</a>
+              <a class="link-quiet" href="mailto:contact@rmgx.in?subject=AI%20project%20enquiry%20for%20RMgX%20Design%20Studio" data-mailto>Or email contact@rmgx.in</a>
+            </div>
+            <p class="starter__note mono" data-starter-note>Pick a topic and we’ll come prepared.</p>
           </div>
-          <div class="starter__actions">
-            <a class="link-cta link-cta--big" href="mailto:contact@rmgx.in?subject=Project%20enquiry%20for%20RMgX%20Design%20Studio" data-mailto>Write to contact@rmgx.in</a>
-            <a class="link-quiet" href="https://calendly.com/rmgx/connect-rds" target="_blank" rel="noopener">Or book a discovery call ↗</a>
-          </div>
-          <p class="starter__note mono" data-starter-note>A person reads every message. Usually within a working day.</p>
+
+          <ol class="next">
+            <li><span class="mono">01</span> A 30-minute call about your idea, users and data</li>
+            <li><span class="mono">02</span> A short written summary of the options we see</li>
+            <li><span class="mono">03</span> A scoped proposal, if there’s a fit</li>
+          </ol>
         </div>
+        <div class="form-slot form-slot--close" data-form="logo-end" aria-hidden="true"></div>
       </div>
 
-      <footer class="footer wrap">
-        <div class="footer__mark" aria-hidden="true">RMgX<span>Design Studio</span></div>
+      <footer class="footer wrap" data-theme="ink">
+        <img class="footer__logo" src="assets/brand/rds-logo.png" width="1010" height="205" alt="RMgX Design Studio">
         <div class="footer__cols">
           <p>The design studio of <a href="https://www.rmgx.in" target="_blank" rel="noopener">RMgX Technologies LLP</a>, India.</p>
           <ul>
@@ -357,11 +408,11 @@
     </section>
   </main>
 
-  <!-- Project drawer -->
+  <!-- Case-study drawer -->
   <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" hidden data-drawer>
     <div class="drawer__scrim" data-drawer-close></div>
     <article class="drawer__sheet" tabindex="-1">
-      <button class="drawer__close" type="button" data-drawer-close aria-label="Close project">Close ✕</button>
+      <button class="drawer__close" type="button" data-drawer-close aria-label="Close case study">Close ✕</button>
       <div class="drawer__body" data-drawer-body></div>
     </article>
   </div>

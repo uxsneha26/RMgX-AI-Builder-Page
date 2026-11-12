@@ -2,7 +2,7 @@
   'use strict';
 
   const D = window.STUDIO_DATA;
-  const { Resolve, Specimen, reducedMotion: RM } = window.Resolve;
+  const { ParticleField, reducedMotion: RM } = window.Resolve;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -54,89 +54,108 @@
   }
 
   /* ------------------------------------------------------------
-     Projects + archive
+     Selected work — ILLUSTRATIVE placeholder case studies.
+     These describe how we would approach a brief. They are not client
+     results: replace them with approved case studies before launch.
   ------------------------------------------------------------ */
-  const projWrap = $('[data-projects]');
-  projWrap.innerHTML = D.projects.map((p, i) => `
-    <article class="proj proj--${p.layout} proj--${p.fit}" style="--plate:${p.plate};--plate-ink:${p.plateInk}" data-proj="${i}">
-      <button class="proj__hit" type="button" data-open="${i}" aria-label="Open ${esc(p.name)} project sheet">
-        <span class="proj__plate">
-          <span class="proj__idx mono">${String(i + 1).padStart(2, '0')} / ${String(D.projects.length).padStart(2, '0')}</span>
-          ${p.award ? '<span class="proj__badge mono">Winner · IBDA 2024</span>' : ''}
-          <img class="proj__img" src="${p.image}" alt="${esc(p.imageAlt)}" loading="lazy" decoding="async">
-          <span class="proj__sector mono">${esc(p.sector)}</span>
-          <span class="proj__open" aria-hidden="true">Open</span>
-        </span>
+  const P = [
+    {
+      name: 'AI career transition platform',
+      sector: 'Workforce · Career services',
+      line: 'Helping people leaving one career map their experience to the next.',
+      flow: ['CVs + work history', 'Skills graph + RAG', 'Matched roles + plan'],
+      challenge: [
+        'Career changers struggle to describe past experience in terms employers recognise.',
+        'Advisors can’t give every user one-to-one guidance.'
+      ],
+      approach: [
+        'Skills extraction from CVs and service records, using an LLM with structured outputs.',
+        'Retrieval over role profiles and live job data to suggest realistic next roles.',
+        'A guided, conversational planner that explains every recommendation.'
+      ],
+      measure: ['Time from sign-up to a first career plan', 'Plan completion rate', 'Advisor hours per user'],
+      caps: ['LLMs', 'RAG', 'Vector databases', 'Product design']
+    },
+    {
+      name: 'AI lending and risk assessment',
+      sector: 'Financial services · SME lending',
+      line: 'Faster, explainable credit decisions for small-business loans.',
+      flow: ['Applications + documents', 'Extraction + risk scoring', 'Underwriter decision'],
+      challenge: [
+        'Manual document review stretches decisions to days.',
+        'Credit teams need to see why a model scores an applicant the way it does.'
+      ],
+      approach: [
+        'Document intelligence to extract and cross-check financial data.',
+        'A risk model alongside existing credit rules, with the reasons shown for every score.',
+        'An underwriter workspace where people keep the final say.'
+      ],
+      measure: ['Time to decision', 'Share of applications processed without re-keying', 'Underwriter override rate'],
+      caps: ['Data engineering', 'Model evaluation', 'APIs & integrations', 'Product design']
+    },
+    {
+      name: 'Intelligent logistics workflows',
+      sector: 'Logistics · Operations',
+      line: 'Fewer manual steps between order, shipment and invoice.',
+      flow: ['Emails + carrier documents', 'Agentic workflow', 'Updated TMS / ERP'],
+      challenge: [
+        'Operations teams re-key data across carrier portals, email and the ERP.',
+        'Exceptions such as delays and mismatched invoices are found late.'
+      ],
+      approach: [
+        'Agents that read emails and documents and update the systems of record.',
+        'Exception detection that flags at-risk shipments early.',
+        'One review queue where staff approve, correct and improve the system.'
+      ],
+      measure: ['Manual touches per shipment', 'How early exceptions are caught', 'Invoice-matching accuracy'],
+      caps: ['AI agents', 'APIs & integrations', 'Cloud infrastructure', 'Model evaluation']
+    }
+  ];
+  const flowHTML = f => `<span class="flow" aria-hidden="true">${f.map((s, j) => `<span class="flow__node"><i class="mono">${String(j + 1).padStart(2, '0')}</i>${esc(s)}</span>`).join('<span class="flow__arrow">→</span>')}</span>`;
+  const projWrap = $('[data-cases]');
+  projWrap.innerHTML = P.map((p, i) => `
+    <article class="case" data-proj="${i}">
+      <button class="case__hit" type="button" data-open="${i}" aria-label="Open case study: ${esc(p.name)}">
+        <span class="case__top mono"><span>${String(i + 1).padStart(2, '0')} / ${String(P.length).padStart(2, '0')}</span><span class="case__tag">Placeholder · Illustrative</span></span>
+        <span class="case__sector mono">${esc(p.sector)}</span>
+        <span class="case__name">${esc(p.name)}</span>
+        <span class="case__line">${esc(p.line)}</span>
+        ${flowHTML(p.flow)}
+        <span class="case__measure"><span class="mono">We’d measure</span>${p.measure.map(esc).join(' · ')}</span>
+        <span class="case__open mono" aria-hidden="true">Read the approach →</span>
       </button>
-      <div class="proj__meta">
-        <h3 class="proj__name"><button type="button" data-open="${i}">${esc(p.name)}</button></h3>
-        <span class="proj__years mono">${esc(p.engagement)}</span>
-        <p class="proj__line">${esc(p.line)}</p>
-        <p class="proj__outcome"><b>${esc(p.outcome)}</b><span>${esc(p.outcomeNote)}</span></p>
-      </div>
     </article>`).join('');
 
-  const archive = $('[data-archive]');
-  archive.innerHTML = D.archive.map(a => {
-    const inner = `<img class="arch__thumb" src="${a.img}" alt="" loading="lazy"><span class="arch__name">${esc(a.name)}</span><span class="arch__what">${esc(a.what)}</span><span class="arch__tag mono">${esc(a.tag)}</span>`;
-    return `<li>${a.link
-      ? `<a class="arch" href="${a.link}" target="_blank" rel="noopener" data-peek-src="${a.img}">${inner}</a>`
-      : `<div class="arch" data-peek-src="${a.img}">${inner}</div>`}</li>`;
-  }).join('');
-
-  // Cursor-following preview for the archive
-  const peek = $('[data-peek]'), peekImg = $('[data-peek-img]');
-  if (hover.matches) {
-    let px = 0, py = 0, cx = 0, cy = 0, raf = 0, on = false;
-    const loop = () => {
-      cx += (px - cx) * 0.18; cy += (py - cy) * 0.18;
-      peek.style.transform = `translate(${cx + 24}px, ${cy - 120}px)`;
-      if (on || Math.abs(px - cx) > 0.5) raf = requestAnimationFrame(loop); else raf = 0;
-    };
-    archive.addEventListener('pointermove', e => {
-      px = e.clientX; py = e.clientY;
-      if (!raf) raf = requestAnimationFrame(loop);
-    });
-    archive.addEventListener('pointerover', e => {
-      const row = e.target.closest('[data-peek-src]');
-      if (!row) return;
-      if (peekImg.getAttribute('src') !== row.dataset.peekSrc) peekImg.src = row.dataset.peekSrc;
-      if (!on) { cx = e.clientX; cy = e.clientY; }
-      on = true; peek.classList.add('is-on');
-    });
-    archive.addEventListener('pointerleave', () => { on = false; peek.classList.remove('is-on'); });
-  }
-
   /* ------------------------------------------------------------
-     Drawer (project sheet)
+     Drawer (case-study sheet)
   ------------------------------------------------------------ */
   const drawer = $('[data-drawer]'), dBody = $('[data-drawer-body]'), dSheet = $('.drawer__sheet');
   let lastFocus = null, drawerIndex = 0;
   function renderDrawer(i) {
-    const p = D.projects[i];
+    const p = P[i];
     drawerIndex = i;
     const list = arr => arr.map(x => `<li>${esc(x)}</li>`).join('');
-    const prev = D.projects[(i - 1 + D.projects.length) % D.projects.length];
-    const next = D.projects[(i + 1) % D.projects.length];
+    const prev = P[(i - 1 + P.length) % P.length];
+    const next = P[(i + 1) % P.length];
     dBody.innerHTML = `
-      <div class="drawer__plate ${p.fit === 'shot' ? 'is-shot' : ''}" style="--plate:${p.plate};--plate-ink:${p.plateInk}">
-        <img src="${p.image}" alt="${esc(p.imageAlt)}">
-      </div>
-      <div class="drawer__kicker mono"><span>${String(i + 1).padStart(2, '0')}</span><span>${esc(p.sector)}</span><span>${esc(p.years)}</span><span>${esc(p.engagement)}</span></div>
+      <p class="drawer__flag mono">Illustrative case study · placeholder content, not a client result</p>
+      <div class="drawer__kicker mono"><span>${String(i + 1).padStart(2, '0')}</span><span>${esc(p.sector)}</span></div>
       <h2 id="drawer-title">${esc(p.name)}</h2>
       <p class="drawer__line">${esc(p.line)}</p>
+      <div class="drawer__flow">${flowHTML(p.flow)}</div>
       <div class="drawer__grid">
-        <div><h3>The knot</h3><ul>${list(p.challenge)}</ul></div>
-        <div><h3>How we untied it</h3><ul>${list(p.solution)}</ul></div>
+        <div><h3>The problem</h3><ul>${list(p.challenge)}</ul></div>
+        <div><h3>Our approach</h3><ul>${list(p.approach)}</ul></div>
       </div>
-      <div class="drawer__impact"><h3>What changed</h3><ul>${list(p.impact)}</ul></div>
+      <div class="drawer__impact"><h3>What we’d measure</h3><ul>${list(p.measure)}</ul></div>
+      <p class="drawer__caps mono">${p.caps.map(esc).join(' · ')}</p>
       <div class="drawer__foot">
-        <span class="drawer__src mono">Source: ${esc(p.source)}</span>
-        ${p.link ? `<a class="link-cta" href="${p.link}" target="_blank" rel="noopener">Full case study</a>` : ''}
+        <span class="drawer__src mono">Have a brief like this?</span>
+        <a class="link-cta" href="https://calendly.com/rmgx/connect-rds" target="_blank" rel="noopener">Book an AI discovery call</a>
       </div>
       <div class="drawer__foot drawer__nav">
-        <button class="link-quiet" type="button" data-drawer-go="${(i - 1 + D.projects.length) % D.projects.length}">← ${esc(prev.name)}</button>
-        <button class="link-quiet" type="button" data-drawer-go="${(i + 1) % D.projects.length}">${esc(next.name)} →</button>
+        <button class="link-quiet" type="button" data-drawer-go="${(i - 1 + P.length) % P.length}">← ${esc(prev.name)}</button>
+        <button class="link-quiet" type="button" data-drawer-go="${(i + 1) % P.length}">${esc(next.name)} →</button>
       </div>`;
     dSheet.scrollTop = 0;
   }
@@ -188,19 +207,20 @@
   }
   openBtn.addEventListener('click', openMenu);
   $('[data-menu-close]').addEventListener('click', () => closeMenu());
-  // The menu art: the resolved chevron, one band per chapter
+  // The menu art: the Design Studio symbol (white on navy, per the brand combos).
+  // Built from the sprite's own paths; the four dots drift in and settle as the menu opens.
   (function buildMenuArt() {
-    const N = 18, cells = [];
-    const poly = [[0, 0], [0.5, 0], [1, 0.5], [0.5, 1], [0, 1], [0.5, 0.5]];
-    const inside = (x, y) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) c = !c; } return c; };
-    for (let r = 0; r < N; r++) for (let q = 0; q < N; q++) if (inside((q + 0.5) / N, (r + 0.5) / N)) cells.push(`<rect x="${q * 10 + 1.5}" y="${r * 10 + 1.5}" width="7" height="7" data-band="${Math.floor(r / (N / 6))}" style="--d:${(q + r) * 18}ms"/>`);
-    $('[data-menu-art]').innerHTML = `<svg viewBox="0 0 ${N * 10} ${N * 10}">${cells.join('')}</svg>`;
+    const drift = [['-40%', '-30%', '-35deg'], ['-10%', '-55%', '40deg'], ['-55%', '25%', '25deg'], ['-20%', '50%', '-30deg']];
+    let d = 0;
+    const parts = $$('#rds-symbol path[data-part]').map(p => {
+      const isDot = p.dataset.part === 'dot';
+      const style = isDot ? ` style="--fx:${drift[d][0]};--fy:${drift[d][1]};--fr:${drift[d][2]};--i:${d++}"` : '';
+      return `<path class="part-${p.dataset.part}" fill-rule="evenodd" d="${p.getAttribute('d')}"${style}/>`;
+    });
+    $('[data-menu-art]').innerHTML = `<svg viewBox="80 47 950 575">${parts.join('')}</svg>`;
   })();
-  const art = $('[data-menu-art]');
   $$('.menu__nav a').forEach(a => {
     const show = () => { note.textContent = a.dataset.note; };
-    a.addEventListener('pointerenter', () => art.dataset.on = [...a.parentNode.parentNode.children].indexOf(a.parentNode));
-    a.addEventListener('focus', () => art.dataset.on = [...a.parentNode.parentNode.children].indexOf(a.parentNode));
     a.addEventListener('pointerenter', show);
     a.addEventListener('focus', show);
     a.addEventListener('click', e => {
@@ -225,216 +245,6 @@
   });
 
   /* ------------------------------------------------------------
-     Hero: the resolve
-  ------------------------------------------------------------ */
-  const hero = $('[data-hero]');
-  const heroField = new Resolve($('[data-cells="hero"]'), { seed: 11, place: 'right' });
-  const heroWord = jumble($('[data-jumble]'), 7);
-  const resNum = $('[data-resolution-num]'), resBar = $('[data-resolution-bar]'), resWrap = $('[data-resolution]');
-  const stage = $('.hero__stage');
-
-  function pointerTo(field, el) {
-    const move = e => {
-      const r = el.getBoundingClientRect();
-      field.setPointer(e.clientX - r.left, e.clientY - r.top);
-    };
-    el.addEventListener('pointermove', move, { passive: true });
-    el.addEventListener('pointerdown', move, { passive: true });
-    el.addEventListener('pointerleave', () => field.setPointer(null));
-  }
-  pointerTo(heroField, stage);
-
-  /* ------------------------------------------------------------
-     Approach: the thread straightens
-  ------------------------------------------------------------ */
-  const threadPath = $('[data-thread]');
-  const THREAD_N = 140;
-  const tangle = (() => {
-    // A deterministic scribble: loops that drift left to right
-    const pts = [];
-    let s = 3;
-    const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    const loops = [[150, 70, 60], [330, 130, 70], [520, 80, 55], [690, 150, 45], [820, 90, 30]];
-    for (let i = 0; i < THREAD_N; i++) {
-      const t = i / (THREAD_N - 1);
-      const x = t * 1200;
-      let y = 110 + Math.sin(t * 19) * 46 * (1 - t) + (r() - 0.5) * 18 * (1 - t);
-      let dx = 0;
-      loops.forEach(([lx, ly, rad]) => {
-        const d = (x - lx) / (rad * 1.6);
-        if (Math.abs(d) < 1) {
-          const a = (d + 1) * Math.PI * 2;
-          dx += Math.sin(a) * rad * 0.9 * (1 - Math.abs(d));
-          y = lerp(y, ly + Math.cos(a) * rad, 1 - Math.abs(d));
-        }
-      });
-      pts.push([x + dx, y]);
-    }
-    return pts;
-  })();
-  function lerp(a, b, t) { return a + (b - a) * t; }
-  function drawThread(p) {
-    // p: 0 tangled → 1 straight. The right end straightens first.
-    let d = '';
-    for (let i = 0; i < THREAD_N; i++) {
-      const t = i / (THREAD_N - 1);
-      const local = clamp((p * 1.6) - (1 - t) * 0.6, 0, 1);
-      const e = local * local * (3 - 2 * local);
-      const x = lerp(tangle[i][0], t * 1200, e);
-      const y = lerp(tangle[i][1], 110, e);
-      d += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
-    }
-    threadPath.setAttribute('d', d);
-  }
-  drawThread(0);
-
-  /* ------------------------------------------------------------
-     Capabilities
-  ------------------------------------------------------------ */
-  const tabsEl = $('[data-caps-tabs]'), panel = $('[data-caps-panel]'), specLabel = $('[data-caps-label]');
-  const lastEnd = tabsEl.lastElementChild;
-  D.stages.forEach((s, i) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'caps__tab';
-    b.setAttribute('role', 'tab');
-    b.id = `cap-tab-${i}`;
-    b.setAttribute('aria-controls', 'cap-panel');
-    b.innerHTML = `<span class="mono">0${i + 1}</span><b>${s.name}</b>`;
-    b.addEventListener('click', () => setStage(i, true));
-    tabsEl.insertBefore(b, lastEnd);
-  });
-  panel.id = 'cap-panel';
-  const tabs = $$('.caps__tab', tabsEl);
-  const spec = new Specimen($('[data-cells="caps"]'));
-  let capIndex = 0;
-  function setStage(i, focus) {
-    capIndex = i;
-    const s = D.stages[i];
-    tabs.forEach((t, k) => { t.setAttribute('aria-selected', String(k === i)); t.tabIndex = k === i ? 0 : -1; });
-    if (focus) tabs[i].focus();
-    panel.setAttribute('aria-labelledby', tabs[i].id);
-    panel.innerHTML = `<div class="panel-enter">
-        <h3>${esc(s.worry)}</h3>
-      </div>
-      <div class="caps__cols panel-enter" style="animation-delay:.08s">
-        <div><h4>What we do</h4><ul>${s.doing.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
-        <div><h4>What you walk away with</h4><ul>${s.getting.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
-      </div>
-      <div class="caps__step panel-enter" style="animation-delay:.14s">
-        <button type="button" data-cap-step="-1" ${i === 0 ? 'disabled' : ''}>← Less clear</button>
-        <button type="button" data-cap-step="1" ${i === D.stages.length - 1 ? 'disabled' : ''}>Clearer →</button>
-      </div>`;
-    specLabel.textContent = `${String(i + 1).padStart(2, '0')} · ${s.label}`;
-    spec.setStage(i);
-  }
-  panel.addEventListener('click', e => { const b = e.target.closest('[data-cap-step]'); if (b) setStage(clamp(capIndex + +b.dataset.capStep, 0, D.stages.length - 1)); });
-  tabsEl.addEventListener('keydown', e => {
-    const k = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-    if (k) { e.preventDefault(); setStage((capIndex + k + tabs.length) % tabs.length, true); }
-    if (e.key === 'Home') { e.preventDefault(); setStage(0, true); }
-    if (e.key === 'End') { e.preventDefault(); setStage(tabs.length - 1, true); }
-  });
-  setStage(0, false);
-
-  /* ------------------------------------------------------------
-     Design × Engineering lab
-  ------------------------------------------------------------ */
-  const lab = $('[data-lab]'), labStage = $('[data-lab-stage]'), seam = $('[data-seam]');
-  const designFrame = $('[data-lab-render="design"]'), codeFrame = $('[data-lab-render="code"]');
-  const STATES = {
-    ready: {
-      note: 'Lead with the ETA — it’s the question people open this card to answer.',
-      net: '<b>200</b> GET /shipments/48213 · 182 ms',
-      body: mode => `
-        <div class="sc__row" ${c(mode, '<ShipmentCard id={48213}>')}><span class="sc__id">#48213 · 2 parcels</span><span class="sc__chip">In transit</span></div>
-        <p class="sc__route" ${c(mode, '{origin} → {destination}')}>Toronto, ON → Vancouver, BC</p>
-        <p class="sc__eta" ${c(mode, 'formatETA(eta, user.tz)')}><small>Arrives</small>Thu, 14:20</p>
-        <div class="sc__steps" ${c(mode, '<Progress steps={5} at={3} />')}><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
-        <div class="sc__row" ${c(mode, '<Actions track share />')}><span class="sc__btns"><span class="sc__btn">Track</span><span class="sc__btn sc__btn--ghost">Share</span></span></div>`,
-      type: 'Display / 28 · 650'
-    },
-    loading: {
-      note: 'The skeleton matches the final layout, so nothing jumps when data lands.',
-      net: '<b class="wait">…</b> GET /shipments/48213 · pending',
-      body: mode => `
-        <div class="sc__row" ${c(mode, '<Skeleton.Header />')}><span class="sc__skel" style="width:40%"></span><span class="sc__skel" style="width:22%"></span></div>
-        <div class="sc__skelwrap" ${c(mode, 'aria-busy="true"')}><span class="sc__skel" style="display:block;width:65%"></span></div>
-        <div class="sc__skelwrap" ${c(mode, '<Skeleton lines={2} />')}><span class="sc__skel" style="display:block;width:45%;height:26px"></span></div>
-        <div class="sc__steps" ${c(mode, 'reserve height: 4px')}><i></i><i></i><i></i><i></i><i></i></div>
-        <div class="sc__row" ${c(mode, 'actions disabled')}><span class="sc__skel" style="width:46%;height:34px"></span></div>`,
-      type: 'Skeleton / 1.4s shimmer'
-    },
-    empty: {
-      note: 'Empty is a first-run moment, not a dead end. Give one obvious next step.',
-      net: '<b>200</b> GET /shipments · [] · 96 ms',
-      body: mode => `
-        <div class="sc__empty" ${c(mode, 'shipments.length === 0')}>
-          <span class="sc__empty-ico">+</span>
-          <p class="sc__eta" style="font-size:1.25rem">No shipments yet</p>
-          <p class="sc__note">Get a rate and book your first pickup in about two minutes.</p>
-        </div>
-        <div class="sc__row" ${c(mode, '<Button primary onClick={newShipment} />')}><span class="sc__btns"><span class="sc__btn">Create a shipment</span></span></div>`,
-      type: 'Heading / 20 · 650'
-    },
-    error: {
-      note: 'Say what happened, keep what we know, offer the next move.',
-      net: '<b class="bad">504</b> carrier gateway timeout · retry in 5 s',
-      body: mode => `
-        <div class="sc__row" ${c(mode, 'catch(err) → keep last known')}><span class="sc__id">#48213 · 2 parcels</span><span class="sc__chip sc__chip--warn">Update delayed</span></div>
-        <p class="sc__route" ${c(mode, 'cached: route')}>Toronto, ON → Vancouver, BC</p>
-        <p class="sc__eta" ${c(mode, 'cached: eta · stale=true')}><small>Last known ETA · 12 min ago</small>Thu, 14:20</p>
-        <p class="sc__note" ${c(mode, 'err.userMessage')}>We couldn’t reach the carrier just now. Your shipment is fine — we’ll keep trying.</p>
-        <div class="sc__row" ${c(mode, '<Button onClick={retry} />')}><span class="sc__btns"><span class="sc__btn">Retry now</span></span></div>`,
-      type: 'Body / 15 · 400'
-    }
-  };
-  function c(mode, code) { return mode === 'code' ? `data-code="${esc(code)}"` : ''; }
-  function renderLab(key) {
-    const s = STATES[key];
-    designFrame.innerHTML = `<div class="sc sc--design">${s.body('design')}
-        <span class="redline redline--pad">24</span>
-        <span class="redline redline--type">${s.type}</span>
-        <p class="redline redline--note">${esc(s.note)}</p>
-      </div>`;
-    codeFrame.innerHTML = `<div class="sc sc--code">${s.body('code')}</div>`;
-    let net = $('.net', labStage);
-    if (!net) { net = document.createElement('p'); net.className = 'net'; $('[data-lab-code]').appendChild(net); }
-    net.innerHTML = s.net;
-    $('[data-lab-note]').textContent = s.note;
-  }
-  $$('[data-state]', lab).forEach(b => b.addEventListener('click', () => {
-    $$('[data-state]', lab).forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-    renderLab(b.dataset.state);
-  }));
-  renderLab('ready');
-
-  function setSeam(pct) {
-    pct = clamp(pct, 4, 96);
-    lab.style.setProperty('--seam', pct + '%');
-    seam.setAttribute('aria-valuenow', Math.round(pct));
-    seam.setAttribute('aria-valuetext', `${Math.round(pct)}% design intent visible`);
-  }
-  let dragging = false;
-  const fromEvent = e => { const r = labStage.getBoundingClientRect(); setSeam(((e.clientX - r.left) / r.width) * 100); };
-  seam.addEventListener('pointerdown', e => { dragging = true; lab.classList.add('is-dragging'); seam.setPointerCapture(e.pointerId); fromEvent(e); });
-  seam.addEventListener('pointermove', e => { if (dragging) fromEvent(e); });
-  const stopDrag = () => { dragging = false; lab.classList.remove('is-dragging'); };
-  seam.addEventListener('pointerup', stopDrag);
-  seam.addEventListener('pointercancel', stopDrag);
-  // click anywhere on the stage moves the seam there
-  labStage.addEventListener('click', e => { if (!e.target.closest('[data-seam]')) fromEvent(e); });
-  seam.addEventListener('keydown', e => {
-    const now = parseFloat(seam.getAttribute('aria-valuenow'));
-    const step = e.shiftKey ? 10 : 4;
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); setSeam(now - step); }
-    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); setSeam(now + step); }
-    if (e.key === 'Home') { e.preventDefault(); setSeam(4); }
-    if (e.key === 'End') { e.preventDefault(); setSeam(96); }
-  });
-  setSeam(50);
-
-  /* ------------------------------------------------------------
      Testimonials
   ------------------------------------------------------------ */
   const voices = $$('.voice'), vCount = $('[data-voice-count]');
@@ -449,21 +259,23 @@
   /* ------------------------------------------------------------
      Close: chips compose the email
   ------------------------------------------------------------ */
-  const closeSec = $('[data-close]');
-  const closeField = new Resolve($('[data-cells="close"]'), { seed: 29, dark: true, fragments: false, place: 'close' });
   jumble($('[data-jumble="close"]'), 19);
-  pointerTo(closeField, closeSec);
   const chips = $$('[data-chip]'), mail = $('[data-mailto]'), starterNote = $('[data-starter-note]');
-  const notes = ['A person reads every message. Usually within a working day.', 'Good start. Hit write — we’ll take it from there.', 'Two threads. We like it already.', 'Plenty to untangle. Perfect.', 'The full knot. Let’s talk.'];
-  let chipBoost = 0;
+  const notes = ['Pick a topic and we’ll come prepared.', 'Noted. Mention it when you book and we’ll bring the right people.', 'Two topics. Plenty for a first call.', 'A broad brief. We’ll help you narrow it down.', 'The full picture. Let’s talk.', 'Not sure is a fine place to start.'];
+  function updateStarter() {
+    const picked = chips.filter(x => x.getAttribute('aria-pressed') === 'true').map(x => x.dataset.chip);
+    const body = `Hi RMgX Design Studio,\n\nWhat we'd like to discuss:\n${picked.map(p => '— ' + p).join('\n') || '— '}\n\nThe idea or problem:\n\n\nThe data and systems involved:\n\n\nWhat a good outcome looks like:\n\n`;
+    mail.href = `mailto:contact@rmgx.in?subject=${encodeURIComponent('AI discovery call: ' + (picked.join(', ') || 'new enquiry'))}&body=${encodeURIComponent(body)}`;
+    starterNote.textContent = notes[picked.length];
+  }
   chips.forEach(b => b.addEventListener('click', () => {
     b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
-    const picked = chips.filter(x => x.getAttribute('aria-pressed') === 'true').map(x => x.dataset.chip);
-    const body = `Hi RMgX Design Studio,\n\nWhat we're bringing:\n${picked.map(p => '— ' + p).join('\n') || '— '}\n\nA little about the product:\n\n\nWhat a good outcome looks like:\n\n`;
-    mail.href = `mailto:contact@rmgx.in?subject=${encodeURIComponent('Project enquiry for RMgX Design Studio')}&body=${encodeURIComponent(body)}`;
-    starterNote.textContent = notes[picked.length];
-    chipBoost = picked.length / chips.length;
-    onScroll();
+    updateStarter();
+  }));
+  // service CTAs jump to the contact section with their topic already picked
+  $$('[data-pick]').forEach(a => a.addEventListener('click', () => {
+    const chip = chips.find(c => c.dataset.chip === a.dataset.pick);
+    if (chip) { chip.setAttribute('aria-pressed', 'true'); updateStarter(); }
   }));
 
   /* ------------------------------------------------------------
@@ -472,62 +284,76 @@
   const io = new IntersectionObserver(entries => entries.forEach(e => {
     if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
   }), { rootMargin: '0px 0px -12% 0px', threshold: 0.05 });
-  $$('.reveal, [data-reframe], .proj, .relay').forEach(el => io.observe(el));
+  $$('.reveal, .case, .steps, .stack__grid').forEach(el => io.observe(el));
 
   /* ------------------------------------------------------------
-     One scroll loop for everything scroll-linked
+     The particle field — one canvas, one pool, the whole page.
+     Hero: the v1 Resolve (scatter, lens, scroll to resolve).
+     Then each [data-form] slot hosts a formation, and the field
+     morphs from one to the next as you read down the page.
+     The same canvas paints the light / dark chapters behind it.
+  ------------------------------------------------------------ */
+  const heroWord = jumble($('[data-jumble]'), 7);
+  const hero = $('#top'), stage = $('[data-hero-stage]');
+  // 0 → 1 over the first part of the hero's sticky scroll
+  const heroProgress = () => {
+    const r = hero.getBoundingClientRect();
+    const run = Math.max(1, r.height - window.innerHeight);
+    return clamp(-r.top / (run * 0.8), 0, 1);
+  };
+  const shapeOf = { logo: 'logo', design: 'design', audit: 'audit', strategy: 'strategy', upgrade: 'upgrade', process: 'process', 'logo-end': 'logo' };
+  const slots = $$('[data-form]').map(el => {
+    const key = el.dataset.form;
+    const host = el.closest('[data-tone]');
+    const slot = { el, shape: shapeOf[key], tone: host ? host.dataset.tone : 'dark' };
+    if (key === 'logo') { slot.share = 0.9; slot.anchor = stage; }
+    if (key === 'logo-end') slot.share = 0.9;
+    if (key === 'process') slot.share = 0.4;
+    return slot;
+  });
+  const bands = $$('[data-tone], [data-shift]');
+  document.documentElement.classList.add('has-field');
+  const field = new ParticleField($('[data-field]'), slots, { stage, heroProgress, bands });
+  // start the intro once fonts are ready, so the fragments render in the brand face
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => field.start());
+
+  // pointer and touch: the lens brings the hero's mess into focus
+  window.addEventListener('pointermove', e => field.setPointer(e.clientX, e.clientY), { passive: true });
+  window.addEventListener('pointerdown', e => field.setPointer(e.clientX, e.clientY), { passive: true });
+  document.addEventListener('pointerleave', () => field.setPointer(null));
+
+  /* ------------------------------------------------------------
+     Header: chapter label, page progress and colour; hide on scroll down
   ------------------------------------------------------------ */
   const header = $('[data-header]');
-  const themed = $$('section[data-theme]');
-  const slants = $$('.slant');
-  const threadEl = $('.thread');
-  let ticking = false, lastY = window.scrollY;
+  const chapters = $$('[data-chapter]');
+  const chapterLabel = $('[data-chapter-label]'), chapterBar = $('[data-chapter-bar]');
+  let ticking = false, lastY = window.scrollY, lastLabel = '';
 
   function onScroll() {
     ticking = false;
     const vh = window.innerHeight, y = window.scrollY;
-
-    // hero progress
-    const hr = hero.getBoundingClientRect();
-    const hp = clamp(-hr.top / (hr.height - vh), 0, 1);
-    heroField.setProgress(hp);
-    heroWord.set(RM.matches ? 0 : clamp(1 - hp * 1.8, 0, 1));
-    resNum.textContent = String(Math.round(hp * 100)).padStart(2, '0');
-    resBar.style.transform = `scaleX(${hp})`;
-    resWrap.classList.toggle('is-off', hr.bottom < vh * 0.5);
-
-    // header colour follows the section beneath it
-    const probe = 30;
-    for (const s of themed) {
+    const max = document.documentElement.scrollHeight - vh;
+    chapterBar.style.transform = 'scaleX(' + (max > 0 ? clamp(y / max, 0, 1) : 0) + ')';
+    // the chapter whose section is under the middle of the screen
+    let label = lastLabel;
+    for (const s of chapters) {
       const r = s.getBoundingClientRect();
-      if (r.top <= probe && r.bottom > probe) { header.dataset.on = s.dataset.theme; break; }
+      if (r.top <= vh * 0.5 && r.bottom > vh * 0.5) { label = s.dataset.chapter; break; }
     }
-    header.classList.toggle('is-solid', y > vh * 0.9 && hr.bottom < 0);
-    // hide on scroll down, show on scroll up (never while menu open)
+    if (label !== lastLabel) { chapterLabel.textContent = label; lastLabel = label; }
+    // header colour follows the page beneath it
+    header.dataset.on = field.toneAt(36) === 'dark' ? 'ink' : 'paper';
+    header.classList.toggle('is-solid', y > vh * 0.6);
     if (y > vh && y > lastY + 4) header.classList.add('is-hidden');
     else if (y < lastY - 4 || y < vh) header.classList.remove('is-hidden');
     lastY = y;
-
-    // slanted tops flatten as the section arrives
-    for (const s of slants) {
-      const r = s.getBoundingClientRect();
-      const t = clamp((vh - r.top) / (vh * 0.9), 0, 1);
-      s.style.setProperty('--cut', ((1 - t) * 7).toFixed(2) + 'vw');
-    }
-
-    // approach thread
-    const tr = threadEl.getBoundingClientRect();
-    if (tr.top < vh && tr.bottom > 0) drawThread(RM.matches ? 1 : clamp((vh - tr.top) / (vh * 0.7), 0, 1));
-
-    // closing resolve
-    const cr = closeSec.getBoundingClientRect();
-    if (cr.top < vh && cr.bottom > 0) {
-      const cp = clamp((vh - cr.top) / (vh * 0.95), 0, 1);
-      closeField.setProgress(clamp(cp * 0.75 + chipBoost * 0.25, 0, 1));
-    }
+    // the jumbled hero word straightens as the scatter resolves
+    heroWord.set(RM.matches ? 0 : clamp(1 - heroProgress() * 1.8, 0, 1));
   }
   window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
   window.addEventListener('resize', onScroll);
-  window.__studio = { heroField, spec, closeField }; // handy for debugging in the console
+
+  window.__studio = { field }; // handy for debugging in the console
   onScroll();
 })();

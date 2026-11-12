@@ -1,25 +1,48 @@
 /* ------------------------------------------------------------------
-   The Resolve — the studio's signature motif.
-   A field of small cells (the "pixels" from the RMgX mark) that move
-   from scattered noise to an exact grid. Used three times on the page:
-   hero (scroll + pointer), capabilities (by stage), contact (on arrival).
+   The Resolve — one continuous particle system for the whole page.
+
+   The hero is the v1/v2 Resolve, unchanged in spirit: square cells
+   scattered over the warm white page (knots plus strays, the reading
+   column kept clear), a pointer lens that snaps nearby cells to the
+   grid and lights up the fragments of mess, and a scroll that resolves
+   the scatter into the RMgX Design Studio symbol.
+
+   From there the same pool of cells carries the story down the page:
+
+     • one fixed canvas, one particle pool, never recreated on scroll
+     • formations are point sets sampled from SVG silhouettes, ordered
+       along a Hilbert curve, so particle i sits in the same region of
+       every shape — a morph is a short, local, coordinated move, never
+       a burst across the screen
+     • neighbouring formations morph with a gentle staggered flow;
+       far-apart ones hand over quietly (fade out, then resolve again)
+     • the canvas also paints the page's light / dark chapters, with
+       soft gradients between them, so the cells always sit on the
+       right ground and the text above stays readable
 ------------------------------------------------------------------- */
 (function () {
   'use strict';
 
   const RM = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  // Brand palette (plus v1's warm white for the light chapters)
   const COL = {
-    ink: [18, 18, 22],
-    paper: [241, 238, 231],
-    violet: [91, 69, 242],
-    violetLight: [150, 136, 255],
-    verm: [255, 91, 46]
+    warm: [241, 238, 231],     // v1 paper — the light chapters
+    navy: [5, 17, 25],         // Dark Blue — the dark chapters
+    ink: [25, 31, 39],         // Neutral Black — the mess on light
+    mist: [218, 231, 240],     // Light Blue
+    violet: [84, 62, 250],     // Design Studio Purple
+    violetDeep: [59, 39, 217],
+    violetLift: [124, 106, 255],
+    blue: [9, 159, 250]        // RMgX Blue
   };
+  const BG = { light: COL.warm, dark: COL.navy };
 
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const lerp = (a, b, t) => a + (b - a) * t;
   const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   const easeInOut = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const mix = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
 
   // Seeded random so layouts are stable between resizes
   function rng(seed) {
@@ -32,427 +55,507 @@
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
-  function gauss(r) { return (r() + r() + r() + r() - 2) / 2; }
+  const gauss = r => (r() + r() + r() + r() - 2) / 2;
 
-  /* Chevron from the RMgX mark, normalised to a 1 x 1 box. */
-  const CHEVRON = [[0.0, 0.0], [0.5, 0.0], [1.0, 0.5], [0.5, 1.0], [0.0, 1.0], [0.5, 0.5]];
-  function inPoly(x, y, poly) {
-    let inside = false;
-    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      const [xi, yi] = poly[i], [xj, yj] = poly[j];
-      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+  /* ------------------------------------------------------------------
+     Shapes. Each is a viewBox plus parts; a part is a filled path
+     (evenodd) or a stroked path with a line width. Tones colour the
+     sampled points: 'grad' runs RMgX Blue → Design Studio Purple across
+     the shape (the logo's own gradient), 'dot' is purple, 'accent' is
+     the one detail that carries the meaning.
+  ------------------------------------------------------------------ */
+  const SHAPES = {
+    // RMgX Design Studio symbol — read from the inline sprite (one source of truth)
+    logo: () => {
+      const els = document.querySelectorAll('#rds-symbol path[data-part]');
+      return {
+        vb: [80, 47, 950, 575],
+        parts: Array.from(els).map(p => ({ d: p.getAttribute('d'), tone: p.dataset.part === 'chevron' ? 'grad' : 'dot' }))
+      };
+    },
+    // AI Product Design — an interface coming together
+    design: () => ({
+      vb: [0, 0, 120, 92],
+      parts: [
+        { d: 'M6 6H114V86H6Z', stroke: 4, tone: 'grad' },
+        { d: 'M6 6H114V18H6Z', tone: 'grad' },
+        { d: 'M14 26H36V78H14Z', tone: 'grad' },
+        { d: 'M44 26H72V50H44Z', tone: 'grad' },
+        { d: 'M78 26H106V50H78Z', tone: 'grad' },
+        { d: 'M44 58H106V63H44Z', tone: 'grad' },
+        { d: 'M44 70H90V75H44Z', tone: 'grad' },
+        { d: 'M92 30L94.5 36L100 38.5L94.5 41L92 47L89.5 41L84 38.5L89.5 36Z', tone: 'accent' }
+      ]
+    }),
+    // AI Audit — inspection: a lens with a verified mark
+    audit: () => ({
+      vb: [0, 0, 100, 100],
+      parts: [
+        { d: 'M14 42A28 28 0 1 0 70 42A28 28 0 1 0 14 42Z', stroke: 8, tone: 'grad' },
+        { d: 'M63 63L90 90', stroke: 11, tone: 'grad' },
+        { d: 'M29 43L38 52L56 33', stroke: 6, tone: 'accent' }
+      ]
+    }),
+    // AI Strategy — direction: a chosen route, the option not taken, and the destination
+    strategy: () => ({
+      vb: [0, 0, 120, 92],
+      parts: [
+        { d: 'M12 80C40 80 40 48 64 48S88 22 102 16', stroke: 6, tone: 'grad' },
+        { d: 'M12 80C50 88 78 74 104 64', stroke: 2.5, tone: 'grad' },
+        { d: 'M4 80A8 8 0 1 0 20 80A8 8 0 1 0 4 80Z', tone: 'dot' },
+        { d: 'M57 48A7 7 0 1 0 71 48A7 7 0 1 0 57 48Z', tone: 'dot' },
+        { d: 'M116 8L94 10L110 28Z', tone: 'accent' }
+      ]
+    }),
+    // AI Business Upgrade — upward transformation
+    upgrade: () => ({
+      vb: [0, 0, 100, 100],
+      parts: [
+        { d: 'M8 72H22V92H8Z', tone: 'grad' },
+        { d: 'M29 60H43V92H29Z', tone: 'grad' },
+        { d: 'M50 46H64V92H50Z', tone: 'grad' },
+        { d: 'M71 30H85V92H71Z', tone: 'grad' },
+        { d: 'M8 54L34 38L52 44L82 14', stroke: 5, tone: 'accent' },
+        { d: 'M94 4L74 8L90 24Z', tone: 'accent' }
+      ]
+    }),
+    // How we build — one continuous line from discovery to optimisation
+    process: () => ({
+      vb: [0, 0, 200, 24],
+      parts: [
+        { d: 'M2 12C26 2 50 22 74 12S124 2 148 12S186 22 198 12', stroke: 2.4, tone: 'grad' },
+        ...[17, 50, 83, 117, 150, 183].map(x => ({ d: `M${x - 4} 12A4 4 0 1 0 ${x + 4} 12A4 4 0 1 0 ${x - 4} 12Z`, tone: 'accent' }))
+      ]
+    })
+  };
+
+  const probe = document.createElement('canvas').getContext('2d');
+  probe.lineCap = 'round'; probe.lineJoin = 'round';
+
+  /* Sample a shape on a regular grid so that it yields roughly `want` points.
+     Points are in normalised box space (u 0..1, v 0..aspect). */
+  function sampleShape(shape, want) {
+    const [vx, vy, vw, vh] = shape.vb;
+    const parts = shape.parts.map(p => ({ ...p, path: new Path2D(p.d) }));
+    const inside = (x, y) => {
+      for (const p of parts) {
+        if (p.stroke) { probe.lineWidth = p.stroke; if (probe.isPointInStroke(p.path, x, y)) return p; }
+        else if (probe.isPointInPath(p.path, x, y, 'evenodd')) return p;
+      }
+      return null;
+    };
+    let hits = 0; const C = 80;
+    for (let j = 0; j < C; j++) for (let i = 0; i < C; i++) if (inside(vx + (i + 0.5) * vw / C, vy + (j + 0.5) * vh / C)) hits++;
+    const area = (hits / (C * C)) * vw * vh;
+    const step = Math.sqrt(area / want);
+    const pts = [];
+    for (let y = vy + step / 2; y < vy + vh; y += step) {
+      for (let x = vx + step / 2; x < vx + vw; x += step) {
+        const p = inside(x, y);
+        if (p) pts.push({ u: (x - vx) / vw, v: (y - vy) / vw, tone: p.tone });
+      }
     }
-    return inside;
+    return { pts, aspect: vh / vw, step: step / vw };
   }
 
-  /* ---------------- Base field: canvas, sizing, loop ---------------- */
-  class Field {
-    constructor(canvas) {
+  /* Hilbert index of (x, y) on an n × n grid: nearby points get nearby indices */
+  function hilbert(n, x, y) {
+    let d = 0;
+    for (let s = n >> 1; s > 0; s >>= 1) {
+      const rx = (x & s) > 0 ? 1 : 0, ry = (y & s) > 0 ? 1 : 0;
+      d += s * s * ((3 * rx) ^ ry);
+      if (ry === 0) {
+        if (rx === 1) { x = n - 1 - x; y = n - 1 - y; }
+        const t = x; x = y; y = t;
+      }
+    }
+    return d;
+  }
+
+  function colourFor(pt, tone) {
+    const t = clamp((pt.u + pt.v) / 1.4, 0, 1);
+    if (tone === 'light') {
+      if (pt.tone === 'dot') return COL.violet;
+      if (pt.tone === 'accent') return COL.violetDeep;
+      return mix(COL.blue, COL.violet, t);
+    }
+    if (pt.tone === 'dot') return COL.violetLift;
+    if (pt.tone === 'accent') return COL.mist;
+    return mix(COL.blue, COL.violetLift, t);
+  }
+
+  /* A formation: every particle gets a point. Points are ordered along a
+     Hilbert curve and particle i maps to point ⌊i·n/N⌋, so particle i lives
+     in the same part of every shape. Where a shape has fewer points than
+     particles, the extra particles share a neighbour's point, invisibly. */
+  function buildFormation(key, N, share, tone) {
+    const s = sampleShape(SHAPES[key](), Math.max(24, Math.round(N * share)));
+    let pts = s.pts.slice(0, N);
+    const H = 256;
+    for (const p of pts) {
+      p.h = hilbert(H, Math.floor(clamp(p.u, 0, 0.999) * H), Math.floor(clamp(p.v / s.aspect, 0, 0.999) * H));
+      p.col = colourFor(p, tone);
+    }
+    pts.sort((a, b) => a.h - b.h);
+    const n = pts.length, map = new Int32Array(N), primary = new Uint8Array(N);
+    let prev = -1;
+    for (let i = 0; i < N; i++) { const k = Math.min(n - 1, Math.floor(i * n / N)); map[i] = k; primary[i] = k !== prev ? 1 : 0; prev = k; }
+    return { pts, map, primary, aspect: s.aspect, step: s.step, tone };
+  }
+
+  // Fragments of the mess, shown in the hero; the lens brings them into focus
+  const FRAGMENTS = ['legacy ERP', '14 user roles', 'edge case #212', 'who approves this?', 'API rate limit', '3 dashboards', 'hallucinations?', 'offline mode', 'model drift', 'pending…', 'why?', 'audit trail', 'drop-off at step 4', 'too many clicks', 'compliance', 'final_v2_FINAL', 'data from 6 systems', 'prompt v14'];
+
+  // the reading column (lower left on desktop, bottom on mobile) stays mostly clear
+  const inCopy = (x, y, w, h, mobile) => mobile ? y > h * 0.5 : (x < w * 0.56 && y > h * 0.2);
+
+  /* ------------------------------------------------------------------
+     The field
+  ------------------------------------------------------------------ */
+  class ParticleField {
+    /**
+     * @param canvas  fixed full-viewport canvas
+     * @param slots   [{ el, shape, tone, share?, anchor? }] page elements that host formations
+     * @param opts    { stage, heroProgress(), bands: [elements with data-tone / data-shift] }
+     */
+    constructor(canvas, slots, opts = {}) {
       this.canvas = canvas;
-      this.ctx = canvas.getContext('2d');
-      this.cells = [];
-      this.visible = false;
-      this.running = false;
-      this.dpr = Math.min(window.devicePixelRatio || 1, 2);
-      this.tick = this.tick.bind(this);
-      new IntersectionObserver(([e]) => {
-        this.visible = e.isIntersecting;
-        if (this.visible) this.wake();
-      }, { rootMargin: '100px' }).observe(canvas);
-      this.ro = new ResizeObserver(() => this.resize());
-      this.ro.observe(canvas);
-    }
-    resize() {
-      const r = this.canvas.getBoundingClientRect();
-      if (!r.width || !r.height) return;
-      if (Math.abs(r.width - this.w) < 1 && Math.abs(r.height - this.h) < 1) return;
-      this.w = r.width; this.h = r.height;
-      this.canvas.width = Math.round(this.w * this.dpr);
-      this.canvas.height = Math.round(this.h * this.dpr);
-      this.layout();
-      this.snapAll();
-      this.wake();
-    }
-    update() {}
-    snapAll() { for (const c of this.cells) Object.assign(c, { x: c.tx, y: c.ty, s: c.ts, r: c.tr, a: c.ta, k: c.tk }); }
-    wake() { if (!this.running && this.visible) { this.running = true; this.lastT = 0; requestAnimationFrame(this.tick); } }
-    tick(now) {
-      if (!this.visible) { this.running = false; return; }
-      this.update(now);
-      const moving = this.step();
-      this.draw();
-      if (moving || this.keepAlive) requestAnimationFrame(this.tick);
-      else this.running = false;
-    }
-    /* Ease every cell toward its target. Returns whether anything is still moving. */
-    step() {
-      const instant = RM.matches;
-      let moving = false;
-      const now = performance.now();
-      // frame-rate independent easing: a slow frame moves further
-      const dt = clamp((now - (this.lastT || now - 16.7)), 1, 250) / 16.7;
-      this.lastT = now;
-      for (const c of this.cells) {
-        if (c.delayUntil && now < c.delayUntil) { moving = true; continue; }
-        const f = instant ? 1 : 1 - Math.pow(1 - (c.ease || 0.14), dt);
-        c.x += (c.tx - c.x) * f; c.y += (c.ty - c.y) * f;
-        c.s += (c.ts - c.s) * f; c.r += (c.tr - c.r) * f;
-        c.a += (c.ta - c.a) * f; c.k += (c.tk - c.k) * f;
-        if (Math.abs(c.tx - c.x) > 0.15 || Math.abs(c.ty - c.y) > 0.15 || Math.abs(c.ta - c.a) > 0.01 || Math.abs(c.tk - c.k) > 0.01) moving = true;
-      }
-      return moving;
-    }
-    color(c) {
-      // k: 0 = chaos colour, 1 = order colour
-      const a = c.from, b = c.to, k = c.k;
-      return `rgba(${Math.round(lerp(a[0], b[0], k))},${Math.round(lerp(a[1], b[1], k))},${Math.round(lerp(a[2], b[2], k))},${c.a.toFixed(3)})`;
-    }
-    draw() {
-      const { ctx, dpr } = this;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, this.w, this.h);
-      this.drawUnder && this.drawUnder(ctx);
-      for (const c of this.cells) {
-        if (c.a < 0.01) continue;
-        const col = this.color(c);
-        const hollow = c.hollow && c.k < 0.5;
-        const s = c.s;
-        if (Math.abs(c.r) < 0.01) {
-          if (hollow) { ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.strokeRect(c.x - s / 2 + 0.5, c.y - s / 2 + 0.5, s - 1, s - 1); }
-          else { ctx.fillStyle = col; ctx.fillRect(c.x - s / 2, c.y - s / 2, s, s); }
-        } else {
-          ctx.save();
-          ctx.translate(c.x, c.y); ctx.rotate(c.r);
-          if (hollow) { ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.strokeRect(-s / 2, -s / 2, s, s); }
-          else { ctx.fillStyle = col; ctx.fillRect(-s / 2, -s / 2, s, s); }
-          ctx.restore();
-        }
-      }
-      this.drawOver && this.drawOver(ctx);
-    }
-  }
-
-  function inCopy(x, y, w, h, mobile) { return mobile ? y > h * 0.42 : (x < w * 0.42 && y > h * 0.3); }
-
-  function cell(props) {
-    return Object.assign({ x: 0, y: 0, s: 6, r: 0, a: 1, k: 0, tx: 0, ty: 0, ts: 6, tr: 0, ta: 1, tk: 0, from: COL.ink, to: COL.violet }, props);
-  }
-
-  /* ---------------- Hero + Contact: chaos → chevron ---------------- */
-  const FRAGMENTS = ['legacy ERP', '14 user roles', 'edge case #212', 'who approves this?', 'API rate limit', '3 dashboards', 'consent?', 'offline mode', 'carrier rates', 'pending…', 'why?', 'audit trail', 'drop-off at step 4', 'too many clicks', 'compliance', 'final_v2_FINAL', 'Excel export', 'notifications', 'data from 6 systems', 'admin view'];
-
-  class Resolve extends Field {
-    constructor(canvas, opts) {
-      super(canvas);
-      this.opts = Object.assign({ seed: 7, dark: false, fragments: true, place: 'right' }, opts);
-      this.p = 0;            // global order 0..1 (scroll)
-      this.pointer = null;   // {x,y} in canvas space
-      this.lens = 0;         // lens strength (fades when idle)
-      this.introStart = performance.now();
+      this.ctx = canvas.getContext('2d', { alpha: false });
+      this.slots = slots;
+      this.opts = opts;
+      this.bands = opts.bands || [];
+      this.pointer = null;
+      this.lens = 0;
+      this.introStart = null;
+      this.parts = [];
       this.frags = [];
-      this.keepAlive = true; // runs through the intro, then sleeps until scroll/pointer
+      this.F = 1400;
+      this.t0 = performance.now();
+      this.tick = this.tick.bind(this);
       this.resize();
+      window.addEventListener('resize', () => this.resize());
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) this.run(); });
+      this.run();
     }
-    layout() {
-      const { w, h } = this;
-      const r = rng(this.opts.seed);
-      const mobile = w < 720;
-      const g = this.g = Math.round(clamp(w / 105, 8, 15));
+
+    start() { if (this.introStart == null) this.introStart = performance.now(); }
+    run() { if (!this.running) { this.running = true; this.lastT = 0; requestAnimationFrame(this.tick); } }
+    setPointer(x, y) {
+      this.pointer = x == null ? null : { x, y };
+      this.lastMove = performance.now();
+    }
+
+    resize() {
+      const w = window.innerWidth, h = window.innerHeight;
+      // mobile URL bars change the height a little while scrolling: ignore that
+      if (w === this.w && Math.abs(h - this.h) < 120) return;
+      this.w = w; this.h = h;
+      this.mobile = w < 720;
+      this.dpr = Math.min(window.devicePixelRatio || 1, this.mobile ? 1.5 : 2);
+      this.canvas.width = Math.round(w * this.dpr);
+      this.canvas.height = Math.round(h * this.dpr);
+      this.N = this.mobile ? 560 : 950;
+      this.forms = this.slots.map(s => buildFormation(s.shape, this.N, s.share || 0.78, s.tone || 'dark'));
+      this.layoutChaos();
+    }
+
+    /* The hero scatter, as in v1: a few dense knots plus strays, in stage space */
+    layoutChaos() {
+      const { w, h, N, mobile } = this;
+      const r = rng(11);
       this.R = mobile ? 110 : 170;
-
-      // Chevron box
-      let bw, bx, by;
-      if (this.opts.place === 'right') {
-        bw = mobile ? Math.min(w * 0.62, h * 0.36) : Math.min(w * 0.36, h * 0.66);
-        bx = mobile ? w - bw - w * 0.06 : w * 0.6;
-        by = mobile ? h * 0.15 : (h - bw) / 2 + h * 0.02;
-      } else { // contact: big and to the right, partially off canvas
-        bw = mobile ? w * 0.7 : Math.min(w * 0.42, h * 0.8);
-        bx = mobile ? w * 0.36 : w - bw - w * 0.04;
-        by = mobile ? h * 0.06 : (h - bw) / 2;
-      }
-      // snap box to grid
-      bx = Math.round(bx / g) * g; by = Math.round(by / g) * g; bw = Math.round(bw / g) * g;
-
-      const targets = [];
-      for (let y = 0; y < bw; y += g) for (let x = 0; x < bw; x += g) {
-        if (inPoly((x + g / 2) / bw, (y + g / 2) / bw, CHEVRON)) targets.push([bx + x + g / 2, by + y + g / 2]);
-      }
-      // The three loose pixels from the RMgX mark, sitting left of the chevron
-      const lp = [[-2.6, 0.30], [-1.7, 0.62], [-3.4, 0.5]];
-      const loose = lp.map(([gx, fy]) => [bx + gx * g * 1.6, Math.round((by + fy * bw) / g) * g + g / 2]);
-
-      // Chaos: a few dense knots plus scattered strays
+      // the lens grid matches the cell size of the logo
+      const hero = this.slots[0];
+      const hb = hero.el.getBoundingClientRect();
+      const bw = Math.min(hb.width, hb.height / this.forms[0].aspect) || w * 0.4;
+      this.g = Math.max(6, this.forms[0].step * bw);
       const knots = Array.from({ length: 6 }, () => [r() * w, (0.1 + r() * 0.8) * h, (0.05 + r() * 0.12) * Math.max(w, h)]);
-      const extra = Math.round(targets.length * 0.28);
-      const total = targets.length + loose.length + extra;
-      const dark = this.opts.dark;
-      const chaosCol = dark ? COL.paper : COL.ink;
-      const orderCol = dark ? COL.violetLight : COL.violet;
-
-      const old = this.cells;
-      this.cells = [];
-      for (let i = 0; i < total; i++) {
+      const old = this.parts;
+      this.parts = [];
+      for (let i = 0; i < N; i++) {
         let cx, cy;
         if (r() < 0.62) { const k = knots[Math.floor(r() * knots.length)]; cx = k[0] + gauss(r) * k[2]; cy = k[1] + gauss(r) * k[2] * 0.7; }
         else { cx = r() * w; cy = r() * h; }
-        // keep the reading column (lower left on desktop, bottom on mobile) mostly clear
-        if (this.opts.place === 'right' && inCopy(cx, cy, w, h, mobile) && r() < 0.8) { cx = mobile ? r() * w : w * (0.45 + r() * 0.55); cy = mobile ? r() * h * 0.5 : cy; }
+        if (inCopy(cx, cy, w, h, mobile) && r() < 0.86) { cx = mobile ? r() * w : w * (0.56 + r() * 0.44); cy = mobile ? r() * h * 0.5 : cy; }
         cx = clamp(cx, 4, w - 4); cy = clamp(cy, 4, h - 4);
-        const isTarget = i < targets.length;
-        const isLoose = !isTarget && i < targets.length + loose.length;
-        const t = isTarget ? targets[i] : isLoose ? loose[i - targets.length] : null;
-        const hot = r() < 0.11;
-        const c = cell({
-          cx, cy, t,
+        const hot = r() < 0.09;
+        const p = {
+          cx, cy,
           rot0: (r() - 0.5) * 1.6,
-          s0: g * (0.25 + r() * 0.75),
+          s0: this.g * (0.3 + r() * 0.7),
           hollow: r() < 0.22,
-          a0: dark ? 0.35 + r() * 0.5 : 0.55 + r() * 0.45,
-          from: hot ? COL.verm : chaosCol,
-          to: t ? orderCol : (dark ? COL.paper : COL.ink),
-          stray: !t,
-          lens: 0,
+          a0: 0.4 + r() * 0.4,
+          chaosCol: hot ? COL.blue : COL.ink,
           ease: 0.1 + r() * 0.08,
-          seedStart: [cx + (r() - 0.5) * w * 0.5, cy + (r() - 0.5) * h * 0.6]
-        });
-        // start position (intro)
+          lag: r(), arc: 0.6 + r() * 0.4,
+          ph: r() * Math.PI * 2, drift: 2 + r() * 4,
+          ux: r(), uy: r(),
+          seed: [(r() - 0.5) * w * 0.5, (r() - 0.5) * h * 0.6],
+          lens: 0
+        };
         const prev = old[i];
-        if (prev) { c.x = prev.x; c.y = prev.y; c.s = prev.s; c.r = prev.r; c.a = prev.a; c.k = prev.k; }
-        else { c.x = c.seedStart[0]; c.y = c.seedStart[1]; c.s = c.s0; c.r = c.rot0 * 3; c.a = 0; c.k = 0; }
-        this.cells.push(c);
+        if (prev) Object.assign(p, { x: prev.x, y: prev.y, s: prev.s, r: prev.r, a: prev.a, col: prev.col, ord: prev.ord });
+        else Object.assign(p, { x: cx + p.seed[0], y: cy + p.seed[1], s: p.s0, r: p.rot0 * 3, a: 0, col: p.chaosCol, ord: 0 });
+        this.parts.push(p);
       }
-      // Fragments of the mess, as text
-      this.frags = [];
-      if (this.opts.fragments) {
-        const n = mobile ? 8 : FRAGMENTS.length;
-        for (let i = 0; i < n; i++) {
-          this.frags.push({ text: FRAGMENTS[i], x: (mobile ? 0.04 + r() * 0.7 : 0.44 + r() * 0.5) * w, y: (mobile ? 0.12 + r() * 0.36 : 0.12 + r() * 0.78) * h, rot: (r() - 0.5) * 0.5, lens: 0, hot: r() < 0.3 });
-        }
-      }
-      this.updateTargets();
+      this.frags = FRAGMENTS.slice(0, mobile ? 8 : FRAGMENTS.length).map(text => ({
+        text,
+        x: (mobile ? 0.04 + r() * 0.7 : 0.44 + r() * 0.5) * w,
+        y: (mobile ? 0.1 + r() * 0.3 : 0.12 + r() * 0.6) * h,
+        rot: (r() - 0.5) * 0.5, lens: 0, hot: r() < 0.3
+      }));
     }
-    snapAll() { /* keep intro animation; positions carry over on resize */ this.updateTargets(); }
-    setProgress(p) { if (Math.abs(p - this.p) > 0.0005) { this.p = p; this.updateTargets(); this.wake(); } }
-    setPointer(x, y) { this.pointer = x == null ? null : { x, y }; this.lastMove = performance.now(); this.keepAlive = true; this.wake(); }
-    update(now) {
-      // intro fade-in
-      const intro = clamp((now - this.introStart) / 1400, 0, 1);
-      this.intro = RM.matches ? 1 : intro;
-      // lens strength fades if pointer idles for a while
-      const idle = this.pointer ? (now - this.lastMove) : 1e9;
-      const want = this.pointer && idle < 2600 ? 1 : 0;
-      this.lens += (want - this.lens) * 0.08;
-      if (!this.pointer && this.lens < 0.01 && intro >= 1) this.keepAlive = false;
-      this.updateTargets();
-    }
-    updateTargets() {
-      const g = this.g, P = easeInOut(this.p), R = this.R, pt = this.pointer, L = this.lens;
-      const intro = this.intro == null ? 0 : this.intro;
-      for (const c of this.cells) {
-        // local lens: cells near the pointer snap to the grid where they are
-        let lensT = 0;
-        if (pt && L > 0.01) {
-          const d = Math.hypot(c.cx - pt.x, c.cy - pt.y);
-          lensT = smooth(R, R * 0.3, d) * L;
-        }
-        c.lens += (lensT - c.lens) * 0.2;
-        const lo = c.lens;
-        const sx = Math.round(c.cx / g) * g + (g / 2), sy = Math.round(c.cy / g) * g + (g / 2);
-        const lx = lerp(c.cx, sx, lo), ly = lerp(c.cy, sy, lo);
-        const order = Math.max(lo, P);
-        if (c.t) {
-          // stagger: cells further from target arrive slightly later
-          c.tx = lerp(lx, c.t[0], P); c.ty = lerp(ly, c.t[1], P);
-          c.ts = lerp(c.s0, g * 0.66, order);
-          c.tr = c.rot0 * (1 - order);
-          c.tk = order;
-          c.ta = lerp(c.a0, 1, order) * intro;
-        } else {
-          // strays settle onto the grid and fade back to quiet registration marks
-          c.tx = lerp(lx, sx, P); c.ty = lerp(ly, sy, P);
-          c.ts = lerp(c.s0, g * 0.18, P);
-          c.tr = c.rot0 * (1 - order);
-          c.tk = lo;
-          c.ta = lerp(c.a0, 0.25, P) * intro;
-        }
-      }
-    }
-    drawUnder(ctx) {
-      // lens ring: a thin crosshair that shows the focus area
-      if (this.pointer && this.lens > 0.05 && !RM.matches) {
-        const { x, y } = this.pointer, R = this.R * 0.62;
-        ctx.strokeStyle = this.opts.dark ? `rgba(150,136,255,${0.5 * this.lens})` : `rgba(91,69,242,${0.45 * this.lens})`;
-        ctx.lineWidth = 1;
-        ctx.setLineDash([2, 4]);
-        ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.beginPath();
-        ctx.moveTo(x - 6, y); ctx.lineTo(x + 6, y); ctx.moveTo(x, y - 6); ctx.lineTo(x, y + 6); ctx.stroke();
-      }
-    }
-    drawOver(ctx) {
-      if (!this.frags.length) return;
-      const P = this.p, pt = this.pointer, R = this.R;
-      const fade = clamp(1 - P * 2.2, 0, 1) * (this.intro || 0);
-      if (fade <= 0) return;
-      ctx.font = `500 ${this.w < 720 ? 10 : 11}px "JetBrains Mono", ui-monospace, monospace`;
-      ctx.textBaseline = 'middle';
-      for (const f of this.frags) {
-        let lt = 0;
-        if (pt && this.lens > 0.01) lt = smooth(R * 1.1, R * 0.3, Math.hypot(f.x - pt.x, f.y - pt.y)) * this.lens;
-        f.lens += (lt - f.lens) * 0.2;
-        const rot = f.rot * (1 - f.lens);
-        ctx.save();
-        ctx.translate(f.x, f.y); ctx.rotate(rot);
-        const tw = ctx.measureText(f.text).width;
-        if (f.lens > 0.05) {
-          ctx.fillStyle = `rgba(91,69,242,${0.95 * f.lens * fade})`;
-          ctx.fillRect(-6, -9, tw + 12, 18);
-        }
-        const base = f.hot ? COL.verm : (this.opts.dark ? COL.paper : COL.ink);
-        const col = [lerp(base[0], 255, f.lens), lerp(base[1], 255, f.lens), lerp(base[2], 255, f.lens)].map(Math.round);
-        ctx.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},${(0.75 + 0.25 * f.lens) * fade})`;
-        if (f.lens < 0.5 && !f.hot) { ctx.strokeStyle = `rgba(${col},${0.3 * fade})`; }
-        ctx.fillText(f.text, 0, 0);
-        ctx.restore();
-      }
-    }
-  }
 
-  /* ---------------- Capabilities specimen: five states ---------------- */
-  class Specimen extends Field {
-    constructor(canvas) {
-      super(canvas);
-      this.stage = 0;
-      this.resize();
-    }
-    layout() {
-      const r = rng(21);
-      const N = 168;
-      if (!this.cells.length) {
-        for (let i = 0; i < N; i++) {
-          this.cells.push(cell({ rnd: [r(), r(), r(), r(), r()], from: COL.ink, to: COL.violet }));
-        }
-      }
-      this.applyStage(this.stage, true);
-    }
-    setStage(i) { this.stage = i; this.applyStage(i, false); this.wake(); }
-    applyStage(stage, instant) {
-      const { w, h } = this, cells = this.cells, N = cells.length;
-      const g = Math.max(8, Math.round(Math.min(w, h) / 30));
-      this.g = g;
-      const pad = g * 2;
-      const W = w - pad * 2, H = h - pad * 2;
-      const now = performance.now();
-      const spots = this.spots(stage, W, H, g, N);
-      cells.forEach((c, i) => {
-        const s = spots[i];
-        c.tx = pad + s.x; c.ty = pad + s.y;
-        c.ts = s.s; c.tr = s.r || 0; c.ta = s.a == null ? 1 : s.a; c.tk = s.k == null ? 1 : s.k;
-        c.hollow = !!s.hollow;
-        c.from = s.from || COL.ink;
-        c.to = s.to || COL.violet;
-        c.ease = 0.12;
-        c.delayUntil = instant || RM.matches ? 0 : now + (c.rnd[4] * 260);
+    /* Where each slot's formation sits on screen right now ("contain" fit) */
+    measure() {
+      return this.slots.map((s, i) => {
+        const r = s.el.getBoundingClientRect();
+        const f = this.forms[i];
+        const bw = Math.min(r.width, r.height / f.aspect);
+        const a = s.anchor ? s.anchor.getBoundingClientRect() : r;
+        return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, bw, bh: bw * f.aspect, ay: a.top + a.height / 2, f };
       });
-      if (instant) this.snapAll();
-      this.annot = stage;
     }
-    /* Returns N target "spots" for a stage */
-    spots(stage, W, H, g, N) {
-      const out = [];
-      const grid = (x, y) => ({ x: Math.round(x / g) * g, y: Math.round(y / g) * g });
-      if (stage === 0) { // Discover: scattered signals
-        this.cells.forEach(c => {
-          const [a, b, d, e] = c.rnd;
-          out.push({ x: a * W, y: b * H, s: g * (0.25 + d * 0.7), r: (e - 0.5) * 1.6, k: 0, a: 0.4 + d * 0.6, hollow: e < 0.3, from: e > 0.88 ? COL.verm : COL.ink });
-        });
-      } else if (stage === 1) { // Define: three affinity groups
-        const centers = [[W * 0.2, H * 0.5], [W * 0.52, H * 0.42], [W * 0.82, H * 0.56]];
-        this.cells.forEach((c, i) => {
-          const [a, b, d] = c.rnd;
-          const k = i % 3, ang = a * Math.PI * 2, rad = Math.sqrt(b) * Math.min(W, H) * 0.2;
-          const p = grid(centers[k][0] + Math.cos(ang) * rad, centers[k][1] + Math.sin(ang) * rad);
-          out.push({ x: p.x, y: p.y, s: g * 0.55, r: (d - 0.5) * 0.25, k: 0.35 + k * 0.2, a: 0.9, from: k === 0 ? COL.verm : COL.ink });
-        });
-      } else { // Design / Prove / Ship: an interface emerges
-        // A coarser grid so each cell reads as one interface unit
-        const gu = this.gu = Math.max(g, Math.floor(Math.min(W / 16, H / 13)));
-        const C = Math.floor(W / gu), R = Math.floor(H / gu);
-        const cw = Math.floor((C - 5) / 2);
-        // Interface blocks in grid units: [x, y, w, h, role]
-        const blocks = [
-          [0, 0, C, 1, 'bar'],
-          [0, 2, 3, R - 2, 'side'],
-          [4, 2, cw, 4, 'card'],
-          [5 + cw, 2, C - 5 - cw, 4, 'card'],
-          [4, 7, C - 4, R - 9, 'table'],
-          [C - 4, R - 1, 4, 1, 'cta']
-        ];
-        const pts = [];
-        blocks.forEach(([bx, by, bw, bh, role]) => {
-          if (stage === 2) { // outlines only — wireframe
-            for (let x = bx; x < bx + bw; x++) { pts.push([x, by, role]); if (bh > 1) pts.push([x, by + bh - 1, role]); }
-            for (let y = by + 1; y < by + bh - 1; y++) { pts.push([bx, y, role]); if (bw > 1) pts.push([bx + bw - 1, y, role]); }
-          } else {
-            for (let y = by; y < by + bh; y++) {
-              if (role === 'table' && (y - by) % 2 === 1) continue; // striped list rows
-              for (let x = bx; x < bx + bw; x++) pts.push([x, y, role]);
-            }
-          }
-        });
-        this.cells.forEach((c, i) => {
-          const visible = i < pts.length;
-          const p = pts[visible ? i : Math.floor(c.rnd[0] * pts.length)];
-          const role = p[2];
-          const j = stage === 3 ? (c.rnd[1] - 0.5) * gu * 0.14 : 0;
-          out.push({
-            x: p[0] * gu + gu / 2 + j, y: p[1] * gu + gu / 2 + j,
-            s: stage === 4 ? gu * 0.84 : stage === 3 ? gu * (0.66 + c.rnd[2] * 0.12) : gu * 0.28,
-            r: 0, k: 1, a: visible ? 1 : 0,
-            from: COL.ink,
-            to: role === 'cta' ? COL.verm : role === 'bar' || role === 'side' ? COL.ink : COL.violet
-          });
-        });
-        this.blocks = blocks;
-      }
+
+    /* Formation-space → screen for particle i in box b, written into `out` */
+    formPos(b, i, t, cosA, sinA, ph, reduced, out) {
+      const f = b.f, q = f.pts[f.map[i]];
+      const lx = (q.u - 0.5) * b.bw, ly = (q.v - f.aspect / 2) * b.bw;
+      const rz = lx * sinA, fs = this.F / (this.F + rz);
+      const wob = reduced ? 0 : 0.5;
+      out.x = b.cx + lx * cosA * fs + Math.sin(t * 1.1 + ph) * wob;
+      out.y = b.cy + ly * fs + Math.cos(t * 0.9 + ph) * wob;
+      out.s = Math.max(1.6, f.step * b.bw * 0.78) * fs;
+      out.a = f.primary[i] ? 0.94 : 0;
+      out.col = q.col;
+      out.r = 0; out.ord = 1;
       return out;
     }
-    drawUnder(ctx) {
-      // faint baseline grid, stronger as the stage advances
-      const g = this.g, pad = g * 2;
-      const alpha = [0, 0.04, 0.07, 0.07, 0.12][this.stage];
-      if (!alpha) return;
-      ctx.fillStyle = `rgba(18,18,22,${alpha})`;
-      for (let y = pad; y < this.h - pad; y += g) for (let x = pad; x < this.w - pad; x += g) ctx.fillRect(x - 0.5, y - 0.5, 1, 1);
+
+    tick(now) {
+      if (document.hidden) { this.running = false; return; }
+      const reduced = RM.matches;
+      const dt = this.lastT ? clamp((now - this.lastT) / 16.7, 0.25, 4) : 1;
+      this.lastT = now;
+      const t = (now - this.t0) / 1000;
+      const { w, h } = this;
+      const mid = h / 2;
+      const intro = this.introStart == null ? 0 : reduced ? 1 : clamp((now - this.introStart) / 1400, 0, 1);
+      const hp = this.opts.heroProgress ? this.opts.heroProgress() : 1;
+      const stage = this.opts.stage ? this.opts.stage.getBoundingClientRect() : { left: 0, top: 0 };
+      const ox = stage.left, oy = stage.top;
+
+      // lens strength: on while the pointer moves, fades when idle or once resolved
+      const pt = this.pointer;
+      const idle = pt ? now - this.lastMove : 1e9;
+      const want = pt && idle < 2600 && !reduced ? 1 - smooth(0.25, 0.6, hp) : 0;
+      this.lens += (want - this.lens) * (1 - Math.pow(0.92, dt));
+      const L = this.lens, R = this.R, g = this.g;
+
+      /* Choreography: A is the formation we are leaving, B the one we are heading to */
+      const boxes = this.measure();
+      const last = boxes.length - 1;
+      let iA = 0, iB = 0, k = 0;
+      if (mid >= boxes[last].ay) { iA = iB = last; }
+      else if (mid > boxes[0].ay) {
+        for (let j = 0; j < last; j++) {
+          if (boxes[j].ay <= mid && mid < boxes[j + 1].ay) { iA = j; iB = j + 1; k = (mid - boxes[j].ay) / (boxes[j + 1].ay - boxes[j].ay); break; }
+        }
+      }
+      let A = boxes[iA], B = boxes[iB];
+      const near = (B.ay - A.ay) / h < 1.9;
+      const dA = (mid - A.ay) / h, dB = (B.ay - mid) / h;
+      // keep a morph on screen: the outgoing shape waits in the upper third,
+      // the incoming one is met in the lower third, so nothing leaves and comes back
+      if (near && iA !== iB) {
+        A = Object.assign({}, A, { cy: Math.max(A.cy, h * 0.34) });
+        B = Object.assign({}, B, { cy: Math.min(B.cy, h * 0.66) });
+      }
+      // the morph happens in the middle of the gap, so each symbol holds beside its copy
+      const K = reduced ? smooth(0.2, 0.8, k) : smooth(0.14, 0.86, k);
+      // direction of travel, for the stagger (leading edge moves first) and the gentle arc
+      let ux = B.cx - A.cx, uy = B.cy - A.cy;
+      const dist = Math.hypot(ux, uy) || 1; ux /= dist; uy /= dist;
+      const arcAmp = Math.min(dist * 0.05, 60);
+      // formations breathe a little once settled
+      const sway = reduced ? 0 : Math.sin(t * 0.3) * 0.1;
+      const cosA = Math.cos(sway), sinA = Math.sin(sway);
+      const heroIn = oy + h > 0;
+
+      const PA = this._pa || (this._pa = {}), PB = this._pb || (this._pb = {}), PH = this._ph || (this._ph = {});
+      for (let i = 0; i < this.parts.length; i++) {
+        const p = this.parts[i];
+
+        // A: the hero's chaos → logo resolve, or a plain formation
+        const posA = iA === 0 ? this.heroPos(p, i, A, t, cosA, sinA, hp, intro, ox, oy, pt, L, R, g, reduced, heroIn, PH, PA)
+          : this.formPos(A, i, t, cosA, sinA, p.ph, reduced, PA);
+
+        let tx, ty, ts, ta, tr, tord, tcol;
+        if (iA === iB) {
+          ({ x: tx, y: ty, s: ts, a: ta, r: tr, ord: tord, col: tcol } = posA);
+        } else if (near) {
+          const posB = this.formPos(B, i, t, cosA, sinA, p.ph, reduced, PB);
+          // leading edge first: how far forward this particle sits along the direction of travel
+          const front = clamp(((posA.x - A.cx) * ux + (posA.y - A.cy) * uy) / (A.bw * 0.6 + 1), -1, 1);
+          const lag = (1 - front) * 0.35 + p.lag * 0.3;          // 0 … 1
+          const W = reduced ? 0 : 0.14;                           // a short, gentle stagger
+          const kk = easeInOut(smooth(lag * W, lag * W + 1 - W, K));
+          const bend = Math.sin(Math.PI * kk) * arcAmp * p.arc;  // one shared, gentle curve
+          tx = lerp(posA.x, posB.x, kk) - uy * bend;
+          ty = lerp(posA.y, posB.y, kk) + ux * bend;
+          ts = lerp(posA.s, posB.s, kk);
+          ta = lerp(posA.a, posB.a, kk);
+          tr = posA.r * (1 - kk);
+          tord = lerp(posA.ord, 1, kk);
+          tcol = mix(posA.col, posB.col, kk);
+        } else if (dA < dB) {
+          // far apart: the formation leaves with its section and fades out quietly
+          ({ x: tx, y: ty, s: ts, r: tr, ord: tord, col: tcol } = posA);
+          ta = posA.a * (1 - smooth(0.35, 0.75, dA));
+        } else {
+          // …and the next one resolves from a local scatter as its section arrives
+          const posB = this.formPos(B, i, t, cosA, sinA, p.ph, reduced, PB);
+          const conv = easeInOut(1 - smooth(0.08, 0.7, dB - p.lag * 0.06));
+          const drift = reduced ? 0 : p.drift;
+          const sx = B.cx + (p.ux - 0.5) * B.bw * 1.25 + Math.sin(t * 0.4 + p.ph) * drift;
+          const sy = B.cy + (p.uy - 0.5) * B.bh * 1.7 + Math.cos(t * 0.33 + p.ph) * drift;
+          tx = lerp(sx, posB.x, conv); ty = lerp(sy, posB.y, conv);
+          tord = conv;
+          ts = lerp(p.s0 * 0.8, posB.s, conv);
+          tr = p.rot0 * (1 - conv);
+          ta = lerp(p.a0 * 0.8, posB.a, conv) * (1 - smooth(0.55, 0.95, dB));
+          tcol = mix(B.f.tone === 'light' ? p.chaosCol : COL.mist, posB.col, conv);
+        }
+
+        // ease toward the target (frame-rate independent); hidden particles jump
+        if (ta < 0.01 && p.a < 0.02) { p.x = tx; p.y = ty; }
+        else {
+          const e = reduced ? 1 : 1 - Math.pow(1 - (iA === 0 ? p.ease : p.ease + 0.08), dt);
+          p.x += (tx - p.x) * e; p.y += (ty - p.y) * e;
+        }
+        const e2 = reduced ? 1 : 1 - Math.pow(0.84, dt);
+        p.s += (ts - p.s) * e2; p.a += (ta - p.a) * e2; p.r += (tr - p.r) * e2; p.ord += (tord - p.ord) * e2;
+        p.col = tcol;
+      }
+
+      this.draw(hp, intro, ox, oy, heroIn, reduced);
+      requestAnimationFrame(this.tick);
     }
-    drawOver(ctx) {
-      if (this.stage < 3 || !this.blocks) return;
-      const g = this.gu, pad = this.g * 2;
-      if (this.stage === 3) {
-        // a cursor heading for the call to action
-        const b = this.blocks[5];
-        const x = pad + (b[0] + b[2] * 0.6) * g, y = pad + (b[1] + b[3]) * g + 2;
-        ctx.fillStyle = '#121216';
-        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 16); ctx.lineTo(x + 4.5, y + 12); ctx.lineTo(x + 11, y + 12); ctx.closePath(); ctx.fill();
+
+    /* The hero, as in v1: scattered cells, a lens that snaps them to the grid,
+       and a scroll (hp) that resolves them into the symbol */
+    heroPos(p, i, b, t, cosA, sinA, hp, intro, ox, oy, pt, L, R, g, reduced, heroIn, PH, out) {
+      const logo = this.formPos(b, i, t, cosA, sinA, p.ph, reduced, PH);
+      // ambient movement: a slow drift around each cell's place
+      const dr = reduced ? 0 : p.drift;
+      const cx = p.cx + Math.sin(t * 0.35 + p.ph) * dr, cy = p.cy + Math.cos(t * 0.29 + p.ph * 1.3) * dr;
+      // lens: cells near the pointer snap to the grid where they are
+      let lensT = 0;
+      if (pt && L > 0.01 && heroIn) lensT = smooth(R, R * 0.3, Math.hypot(ox + cx - pt.x, oy + cy - pt.y)) * L;
+      p.lens += (lensT - p.lens) * 0.2;
+      const lo = p.lens;
+      const gx = Math.round(cx / g) * g + g / 2, gy = Math.round(cy / g) * g + g / 2;
+      const lx = ox + lerp(cx, gx, lo), ly = oy + lerp(cy, gy, lo);
+      // scroll: staggered resolve into the symbol
+      const P = easeInOut(smooth(p.lag * 0.3, p.lag * 0.3 + 0.7, hp));
+      const order = Math.max(lo, P);
+      out.x = lerp(lx, logo.x, P);
+      out.y = lerp(ly, logo.y, P);
+      out.s = lerp(p.s0, logo.s, order);
+      out.r = p.rot0 * (1 - order);
+      out.ord = order;
+      out.col = mix(p.chaosCol, logo.col, order);
+      out.a = lerp(lerp(p.a0, 1, lo), logo.a, P) * intro;
+      return out;
+    }
+
+    draw(hp, intro, ox, oy, heroIn, reduced) {
+      const { ctx, dpr, w, h } = this;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // 1 — the page's light / dark chapters
+      ctx.fillStyle = `rgb(${BG.light})`;
+      ctx.fillRect(0, 0, w, h);
+      for (const el of this.bands) {
+        const r = el.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > h || !r.height) continue;
+        const top = Math.max(r.top, -1), bot = Math.min(r.bottom, h + 1);
+        if (el.dataset.shift) {
+          const a = BG[el.dataset.from], b = BG[el.dataset.to];
+          const grd = ctx.createLinearGradient(0, r.top, 0, r.bottom);
+          for (let s = 0; s <= 8; s++) { const u = s / 8, m = smooth(0, 1, u); grd.addColorStop(u, `rgb(${mix(a, b, m).map(Math.round)})`); }
+          ctx.fillStyle = grd;
+        } else ctx.fillStyle = `rgb(${BG[el.dataset.tone] || BG.light})`;
+        ctx.fillRect(0, top, w, bot - top);
       }
-      if (this.stage === 4) {
-        // redlines: dimension markers
-        ctx.strokeStyle = 'rgba(255,91,46,.9)'; ctx.fillStyle = 'rgba(255,91,46,1)';
+
+      // 2 — the lens ring (hero only)
+      const pt = this.pointer;
+      if (pt && this.lens > 0.05 && heroIn && !reduced) {
+        const R = this.R * 0.62;
+        ctx.strokeStyle = `rgba(84,62,250,${0.45 * this.lens})`;
         ctx.lineWidth = 1;
-        ctx.font = '500 10px "JetBrains Mono", monospace';
-        const b = this.blocks[2];
-        const x0 = pad + b[0] * g, x1 = pad + (b[0] + b[2]) * g, y = pad + (b[1] * g) - g * 0.6;
-        ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.moveTo(x0, y - 4); ctx.lineTo(x0, y + 4); ctx.moveTo(x1, y - 4); ctx.lineTo(x1, y + 4); ctx.stroke();
-        ctx.textAlign = 'center'; ctx.fillText(`${b[2]} col`, (x0 + x1) / 2, y - 6); ctx.textAlign = 'start';
-        const sb = this.blocks[1];
-        const sx = pad + sb[0] * g - this.g * 0.9, sy0 = pad + sb[1] * g, sy1 = pad + (sb[1] + sb[3]) * g;
-        ctx.beginPath(); ctx.moveTo(sx, sy0); ctx.lineTo(sx, sy1); ctx.moveTo(sx - 4, sy0); ctx.lineTo(sx + 4, sy0); ctx.moveTo(sx - 4, sy1); ctx.lineTo(sx + 4, sy1); ctx.stroke();
-        ctx.save(); ctx.translate(sx - 5, (sy0 + sy1) / 2 + 16); ctx.rotate(-Math.PI / 2); ctx.fillText('fill', 0, 0); ctx.restore();
+        ctx.setLineDash([2, 4]);
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, R, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(pt.x - 6, pt.y); ctx.lineTo(pt.x + 6, pt.y); ctx.moveTo(pt.x, pt.y - 6); ctx.lineTo(pt.x, pt.y + 6); ctx.stroke();
       }
+
+      // 3 — the cells: squares, hollow while they are still part of the mess
+      for (const p of this.parts) {
+        if (p.a < 0.01 || p.y < -20 || p.y > h + 20) continue;
+        const c = p.col, s = p.s;
+        const style = `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${Math.min(1, p.a).toFixed(3)})`;
+        const hollow = p.hollow && p.ord < 0.5;
+        if (Math.abs(p.r) < 0.02) {
+          if (hollow) { ctx.strokeStyle = style; ctx.lineWidth = 1; ctx.strokeRect(p.x - s / 2 + 0.5, p.y - s / 2 + 0.5, s - 1, s - 1); }
+          else { ctx.fillStyle = style; ctx.fillRect(p.x - s / 2, p.y - s / 2, s, s); }
+        } else {
+          ctx.save();
+          ctx.translate(p.x, p.y); ctx.rotate(p.r);
+          if (hollow) { ctx.strokeStyle = style; ctx.lineWidth = 1; ctx.strokeRect(-s / 2, -s / 2, s, s); }
+          else { ctx.fillStyle = style; ctx.fillRect(-s / 2, -s / 2, s, s); }
+          ctx.restore();
+        }
+      }
+
+      // 4 — fragments of the mess (hero only); the lens highlights the ones near the pointer
+      const fade = clamp(1 - hp * 2.2, 0, 1) * intro;
+      if (fade > 0 && heroIn && this.frags.length) {
+        const R = this.R;
+        ctx.font = `500 ${this.mobile ? 11 : 12}px "Open Sauce One", system-ui, sans-serif`;
+        ctx.textBaseline = 'middle';
+        for (const f of this.frags) {
+          const fx = ox + f.x, fy = oy + f.y;
+          let lt = 0;
+          if (pt && this.lens > 0.01) lt = smooth(R * 1.1, R * 0.3, Math.hypot(fx - pt.x, fy - pt.y)) * this.lens;
+          f.lens += (lt - f.lens) * 0.2;
+          ctx.save();
+          ctx.translate(fx, fy); ctx.rotate(f.rot * (1 - f.lens));
+          const tw = ctx.measureText(f.text).width;
+          if (f.lens > 0.05) {
+            ctx.fillStyle = `rgba(84,62,250,${0.95 * f.lens * fade})`;
+            ctx.fillRect(-6, -9, tw + 12, 18);
+          }
+          const base = f.hot ? COL.blue : COL.ink;
+          const col = mix(base, [255, 255, 255], f.lens).map(Math.round);
+          ctx.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},${(0.75 + 0.25 * f.lens) * fade})`;
+          ctx.fillText(f.text, 0, 0);
+          ctx.restore();
+        }
+      }
+    }
+
+    /* The colour of the page at a given screen y (used for the header) */
+    toneAt(y) {
+      for (const el of this.bands) {
+        const r = el.getBoundingClientRect();
+        if (y >= r.top && y < r.bottom) return el.dataset.shift ? (y - r.top < r.height / 2 ? el.dataset.from : el.dataset.to) : el.dataset.tone;
+      }
+      return 'light';
     }
   }
 
-  window.Resolve = { Resolve, Specimen, reducedMotion: RM };
+  window.Resolve = { ParticleField, reducedMotion: RM };
 })();
